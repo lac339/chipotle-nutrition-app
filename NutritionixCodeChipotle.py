@@ -111,54 +111,6 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             if item_counts[item] > 1:
                 display_labels.append(f"{item} x{seen[item]}")
             else:
-                display_labels.append(item)
-
-        selected_df = pd.DataFrame([
-            chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].iloc[0].copy()
-            for item in selected_items
-            if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
-        ])
-        selected_df["Item"] = display_labels
-
-        numeric_cols = [
-            "Calories", "Protein (g)", "Sodium (mg)", "Fiber (g)", "Cholesterol (mg)","Total Fat (g)", "Saturated Fat (g)", 
-             "Carbs (g)", "Sugars (g)"
-        ]
-        total_row = selected_df[numeric_cols].sum().to_frame().T
-        total_row.insert(0, "Serving Size", "")
-        total_row.insert(0, "Item", "TOTAL")
-        table_display = pd.concat([selected_df, total_row], ignore_index=True)
-
-        st.subheader("\U0001F37D\ufe0f Meal Nutrition Breakdown")
-        st.dataframe(table_display, use_container_width=True)
-        st.success(f"\u2705 Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
-
-        # Nutritionix NLP
-        headers = {
-            "x-app-id": "your-app-id",  # Replace with your real app ID
-            "x-app-key": "your-app-key",  # Replace with your real key
-            "Content-Type": "application/json"
-        }
-        exercise_payload = {
-            "query": exercise_query,
-            "gender": gender,
-            "weight_kg": weight_kg,
-            "height_cm": height_cm,
-            "age": age
-        }
-
-        response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
-        exercise_data = response.json()
-        fallback_duration = 60
-
-        if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-            exercise = exercise_data["exercises"][0]
-    duration = exercise.get("duration_min", fallback_duration)
-    exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
-
-    exercise_calories = exercise_calories_nlp
-    net_calories = meal_totals["Calories"] - exercise_calories
-        else:
             duration = fallback_duration
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
             net_calories = meal_totals["Calories"] - exercise_calories
