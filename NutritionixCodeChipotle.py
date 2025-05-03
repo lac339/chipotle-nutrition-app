@@ -128,8 +128,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         selected_df["Item"] = display_labels
 
         numeric_cols = [
-            "Calories", "Total Fat (g)", "Saturated Fat (g)", "Cholesterol (mg)",
-            "Sodium (mg)", "Carbs (g)", "Fiber (g)", "Sugars (g)", "Protein (g)"
+            "Calories", "Protein (g)", "Sodium (mg)", "Fiber (g)", "Cholesterol (mg)","Total Fat (g)", "Saturated Fat (g)", 
+             "Carbs (g)", "Sugars (g)"
         ]
         total_row = selected_df[numeric_cols].sum().to_frame().T
         total_row.insert(0, "Serving Size", "")
