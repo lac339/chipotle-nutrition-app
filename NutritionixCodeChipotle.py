@@ -162,7 +162,5 @@ if "net_calories" in st.session_state:
 
         
 
-        
-
 
         
