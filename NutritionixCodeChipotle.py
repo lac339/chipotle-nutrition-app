@@ -104,74 +104,77 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 if st.button("Calculate Nutrition + Exercise Balance"):
-    meal_totals, breakdown = calculate_total_nutrition(selected_items)
+    if not selected_items:
+        st.warning("⚠️ No ingredients selected — build your dream bowl first!")
+    else:
+        meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
-    item_counts = Counter(selected_items)
-    seen = Counter()
-    display_labels = []
-    for item in selected_items:
-        seen[item] += 1
-        if item_counts[item] > 1:
-            display_labels.append(f"{item} x{seen[item]}")
-        else:
-            display_labels.append(item)
+        item_counts = Counter(selected_items)
+        seen = Counter()
+        display_labels = []
+        for item in selected_items:
+            seen[item] += 1
+            if item_counts[item] > 1:
+                display_labels.append(f"{item} x{seen[item]}")
+            else:
+                display_labels.append(item)
 
-    selected_df = pd.DataFrame([
-        chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].iloc[0].copy()
-        for item in selected_items
-        if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
-    ])
-    selected_df["Item"] = display_labels
+        selected_df = pd.DataFrame([
+            chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].iloc[0].copy()
+            for item in selected_items
+            if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
+        ])
+        selected_df["Item"] = display_labels
 
-    numeric_cols = [
-        "Calories", "Protein (g)", "Sodium (mg)", "Fiber (g)", "Cholesterol (mg)",
-        "Total Fat (g)", "Saturated Fat (g)", "Carbs (g)", "Sugars (g)"
-    ]
-    total_row = selected_df[numeric_cols].sum().to_frame().T
-    total_row.insert(0, "Serving Size", "")
-    total_row.insert(0, "Item", "TOTAL")
-    table_display = pd.concat([selected_df, total_row], ignore_index=True)
+        numeric_cols = [
+            "Calories", "Protein (g)", "Sodium (mg)", "Fiber (g)", "Cholesterol (mg)",
+            "Total Fat (g)", "Saturated Fat (g)", "Carbs (g)", "Sugars (g)"
+        ]
+        total_row = selected_df[numeric_cols].sum().to_frame().T
+        total_row.insert(0, "Serving Size", "")
+        total_row.insert(0, "Item", "TOTAL")
+        table_display = pd.concat([selected_df, total_row], ignore_index=True)
 
-    st.subheader("🍽️ Meal Nutrition Breakdown")
-    st.dataframe(table_display, use_container_width=True)
-    st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
+        st.subheader("🍽️ Meal Nutrition Breakdown")
+        st.dataframe(table_display, use_container_width=True)
+        st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
-    exercise_calories = 0
-    if exercise_choice != "None":
-        # Nutritionix NLP
-        headers = {
-            "x-app-id": "your-app-id",
-            "x-app-key": "your-app-key",
-            "Content-Type": "application/json"
-        }
-        exercise_payload = {
-            "query": exercise_choice,
-            "gender": gender,
-            "weight_kg": weight_kg,
-            "height_cm": height_cm,
-            "age": age
-        }
-        response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
-        exercise_data = response.json()
+        exercise_calories = 0
+        if exercise_choice != "None":
+            # Nutritionix NLP
+            headers = {
+                "x-app-id": "your-app-id",
+                "x-app-key": "your-app-key",
+                "Content-Type": "application/json"
+            }
+            exercise_payload = {
+                "query": exercise_choice,
+                "gender": gender,
+                "weight_kg": weight_kg,
+                "height_cm": height_cm,
+                "age": age
+            }
+            response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
+            exercise_data = response.json()
 
-        if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-            exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
-        else:
-            exercise_calories = calories_burned_local(exercise_choice, weight_kg, duration_min)
+            if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
+                exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+            else:
+                exercise_calories = calories_burned_local(exercise_choice, weight_kg, duration_min)
 
-    net_calories = meal_totals["Calories"] - exercise_calories
+        net_calories = meal_totals["Calories"] - exercise_calories
 
-    st.session_state["net_calories"] = net_calories
-    st.session_state["meal_totals"] = meal_totals
-    st.session_state["table_display"] = table_display
+        st.session_state["net_calories"] = net_calories
+        st.session_state["meal_totals"] = meal_totals
+        st.session_state["table_display"] = table_display
 
-    st.subheader("🔥 Exercise Output")
-    st.write(f"Calories burned: {exercise_calories}")
-    st.info(f"Net Calories: {net_calories}")
+        st.subheader("🔥 Exercise Output")
+        st.write(f"Calories burned: {exercise_calories}")
+        st.info(f"Net Calories: {net_calories}")
 
 # Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
-    st.subheader("📈 Weekly Calorie + Exercise Projection")
+    st.subheader("📈 Weekly Calorie Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
     frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
 
