@@ -58,11 +58,12 @@ def calories_burned_local(activity, weight_kg, duration_min):
         "kayaking": 5.0, "skating": 7.0, "fencing": 6.0, "gardening": 3.8,
         "mowing lawn": 5.5, "housework": 3.0, "cleaning": 3.5, "jumping": 8.5
     }
-    key = activity.lower().split()[0]
-    met = METS.get(key, 3.5)
-    return round(met * weight_kg * (duration_min / 60), 2)
+    try:
+        key = activity.lower().split()[0]
+        met = METS.get(key, 3.5)
+        return round(met * weight_kg * (duration_min / 60), 2)
     except Exception:
-        return 3.5 * weight_kg * (duration_min / 60)
+        return round(3.5 * weight_kg * (duration_min / 60), 2)
 
 # UI
 st.title("\U0001F32F Chipotle Bowl + Fitness Analyzer")
