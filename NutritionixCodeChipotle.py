@@ -156,12 +156,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             duration = exercise.get("duration_min", fallback_duration)
             exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
 
-            if exercise_calories_nlp > 0:
-                exercise_calories = exercise_calories_nlp
-            else:
-                exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-
-            net_calories = meal_totals["Calories"] - exercise_calories
+            exercise_calories = exercise_calories_nlp
+net_calories = meal_totals["Calories"] - exercise_calories
         else:
             duration = fallback_duration
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
