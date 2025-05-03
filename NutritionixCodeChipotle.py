@@ -17,7 +17,7 @@ st.markdown(
     f"""
     <style>
     .stApp {{
-        background-image: url("https://s3-symbol-logo.tradingview.com/chipotle-mexican-grill--600.png");
+        background-image: url("https://www.flyers-on-line.com/chipotle-mexican-grill/logo-2452/chipotle-mexican-grill.jpg");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
