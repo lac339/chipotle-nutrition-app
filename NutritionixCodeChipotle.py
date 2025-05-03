@@ -17,7 +17,7 @@ st.markdown(
     f"""
     <style>
     .stApp {{
-        background-image: url("https://www.marketbeat.com/logos/chipotle-mexican-grill-inc-logo-1200x675.png");
+        background-image: url("https://media.yourobserver.com/img/photos/2023/01/26/Chipotle_r850x580.jpeg?50e13880ccc54d977011a5484f156b28f4611466");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
