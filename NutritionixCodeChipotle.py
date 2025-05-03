@@ -152,7 +152,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         fallback_duration = 60
 
         if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-    exercise = exercise_data["exercises"][0]
+            exercise = exercise_data["exercises"][0]
     duration = exercise.get("duration_min", fallback_duration)
     exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
 
