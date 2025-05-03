@@ -18,7 +18,6 @@ html, body, [class*="css"]  {{
     font-family: 'Arial', sans-serif;
 }}
 
-/* Fix button styling */
 button[kind="primary"] {{
     background-color: #ffffff !important;
     color: #111111 !important;
@@ -37,16 +36,36 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Ingredient options
+# Sanitized Chipotle items (mapped exactly to Nutritionix-friendly terms)
+item_mapping = {
+    'chicken': 'chipotle chicken',
+    'steak': 'chipotle steak',
+    'barbacoa': 'chipotle barbacoa',
+    'carnitas': 'chipotle carnitas',
+    'sofritas': 'chipotle sofritas',
+    'white rice': 'chipotle white rice',
+    'brown rice': 'chipotle brown rice',
+    '1/2 white rice and 1/2 brown rice': 'chipotle white rice, chipotle brown rice',
+    'black beans': 'chipotle black beans',
+    'pinto beans': 'chipotle pinto beans',
+    'both beans': 'chipotle black beans, chipotle pinto beans',
+    'cheese': 'chipotle cheese',
+    'sour cream': 'chipotle sour cream',
+    'lettuce': 'chipotle romaine lettuce',
+    'guacamole': 'chipotle guacamole',
+    'fresh tomato salsa': 'chipotle fresh tomato salsa',
+    'roasted chili-corn salsa': 'chipotle roasted chili-corn salsa',
+    'tomatillo-green chili salsa': 'chipotle tomatillo green chili salsa',
+    'tomatillo-red chili salsa': 'chipotle tomatillo red chili salsa',
+    'fajita veggies': 'chipotle fajita vegetables',
+    'queso blanco': 'chipotle queso blanco'
+}
+
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
 grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
 beans = ['None', 'black beans', 'pinto beans', 'both beans']
-toppings = [
-    'cheese', 'sour cream', 'lettuce', 'guacamole', 'fresh tomato salsa', 'roasted chili-corn salsa',
-    'tomatillo-green chili salsa', 'tomatillo-red chili salsa', 'fajita veggies', 'queso blanco'
-]
+toppings = list(item_mapping.keys())[12:]  # start at cheese
 
-# Streamlit UI
 st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
 
 st.header("🍽️ Choose Your Ingredients")
@@ -56,17 +75,20 @@ selected_grain = st.selectbox("Choose your grain:", grains)
 selected_beans = st.selectbox("Choose your beans:", beans)
 selected_toppings = st.multiselect("Choose your toppings:", toppings)
 
-# Build the query string, excluding 'None' items
 query_parts = []
 if selected_protein != "None":
-    query_parts.append(selected_protein)
+    mapped = item_mapping[selected_protein]
+    query_parts.append(mapped)
     if double_protein:
-        query_parts.append(selected_protein)
+        query_parts.append(mapped)
 if selected_grain != "None":
-    query_parts.append(selected_grain)
+    for grain in item_mapping[selected_grain].split(","):
+        query_parts.append(grain.strip())
 if selected_beans != "None":
-    query_parts.append(selected_beans)
-query_parts.extend(selected_toppings)
+    for bean in item_mapping[selected_beans].split(","):
+        query_parts.append(bean.strip())
+for topping in selected_toppings:
+    query_parts.append(item_mapping[topping])
 
 query = ", ".join(query_parts)
 st.write(f"Meal: {query if query else 'None selected'}")
@@ -76,15 +98,13 @@ gender = st.selectbox("Sex:", ["None", "male", "female"])
 age = st.number_input("Age (years):", min_value=10, max_value=100, value=25)
 weight_lbs = st.number_input("Weight (lbs):", min_value=50.0, max_value=400.0, value=160.0)
 height_in = st.number_input("Height (inches):", min_value=48.0, max_value=84.0, value=70.0)
-
 exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour")
 
 st.header("🎯 Set Your Nutrition Targets")
-target_calories = 700  # Fixed benchmark for standard meal
+target_calories = 700
 target_protein = st.slider("Target Protein (grams):", min_value=10, max_value=100, value=30, step=5)
 st.markdown("_We use 700 calories as a general benchmark for a balanced meal. A slight surplus isn’t bad — it depends on your activity level and goals._")
 
-# Convert to metric
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
@@ -94,12 +114,10 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     elif gender == "None":
         st.error("❌ Please select your biological sex.")
     else:
-        # Nutrition Request
         nutrition_url = "https://trackapi.nutritionix.com/v2/natural/nutrients"
         response = requests.post(nutrition_url, headers=headers, json={"query": query})
         data = response.json()
 
-        # Exercise Request
         exercise_url = "https://trackapi.nutritionix.com/v2/natural/exercise"
         exercise_payload = {
             "query": exercise_query,
@@ -117,6 +135,12 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             sodium = sum(f["nf_sodium"] for f in data["foods"])
 
             st.success(f"🍽️ Meal: {calories:.0f} calories | Protein: {protein:.1f} g | Sodium: {sodium:.0f} mg")
+
+            st.subheader("🔍 Nutrition Breakdown by Item")
+            for f in data["foods"]:
+                st.write(f"{f['food_name'].title()}: {f['nf_calories']} cal, {f['nf_sodium']} mg sodium, {f['nf_protein']} g protein")
+                if f["nf_sodium"] > 1500:
+                    st.warning(f"⚠️ '{f['food_name'].title()}' contains over 1,500 mg of sodium. Consider reviewing this ingredient.")
 
             if protein < target_protein:
                 st.warning(f"💪 Protein is below your target by {target_protein - protein:.1f} g")
@@ -151,4 +175,3 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             ]
         })
         st.table(df)
-
