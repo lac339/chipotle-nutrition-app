@@ -1,70 +1,59 @@
+#Section 1: Imports and Data Load
 import streamlit as st
 import pandas as pd
 import requests
-import altair as alt
-import base64
-from collections import Counter
+from calories_burned import burned_calories  # New: validation package
 
-# Optional: background image using hosted image
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("https://media.yourobserver.com/img/photos/2023/01/26/Chipotle_r850x580.jpeg?50e13880ccc54d977011a5484f156b28f4611466");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Load and round Chipotle nutrition data
+# Load official Chipotle nutrition data from CSV
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
-numeric_columns = chipotle_df.select_dtypes(include='number').columns
-chipotle_df[numeric_columns] = chipotle_df[numeric_columns].round(0).astype(int)
-
-if "results" not in st.session_state:
-    st.session_state.results = {}
 
 def get_chipotle_nutrition(item_name):
     match = chipotle_df[chipotle_df['Item'].str.lower() == item_name.lower()]
-    return match.iloc[0].to_dict() if not match.empty else None
+    if not match.empty:
+        return match.iloc[0].to_dict()
+    return None
 
 def calculate_total_nutrition(selected_items):
     total = {
-        "Calories": 0, "Sodium (mg)": 0, "Protein (g)": 0,
-        "Total Fat (g)": 0, "Saturated Fat (g)": 0, "Cholesterol (mg)": 0,
-        "Carbs (g)": 0, "Fiber (g)": 0, "Sugars (g)": 0
+        "Calories": 0, "Total Fat (g)": 0, "Saturated Fat (g)": 0, "Cholesterol (mg)": 0,
+        "Sodium (mg)": 0, "Carbs (g)": 0, "Fiber (g)": 0, "Sugars (g)": 0, "Protein (g)": 0
     }
     breakdown = []
     for item in selected_items:
-        chipotle_data = get_chipotle_nutrition(item)
-        if chipotle_data:
+        data = get_chipotle_nutrition(item)
+        if data:
             for key in total:
-                total[key] += chipotle_data.get(key, 0)
-            breakdown.append(chipotle_data)
-    return total, breakdown
+                total[key] += round(data.get(key, 0))
+            breakdown.append({
+                "Item": item.title(),
+                **{k: round(data.get(k, 0)) for k in total}
+            })
+    return total, pd.DataFrame(breakdown)
 
-# UI
-st.title("🌯 Chipotle Bowl + Fitness Analyzer")
+#Section 2: UI Setup and Background
+# Custom background
+st.markdown('''<style>.stApp {
+background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
+background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
+}</style>''', unsafe_allow_html=True)
 
+st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
+
+# Section 3: Ingredient Selection
+# Ingredient categories
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
 grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
 beans = ['None', 'black beans', 'pinto beans', 'both beans']
 toppings = [
-    'cheese', 'sour cream', 'guacamole', 'queso blanco', 'fajita vegetables',
-    'fresh tomato salsa', 'roasted chili-corn salsa', 'tomatillo green-chili salsa',
-    'tomatillo red-chili salsa', 'romaine lettuce'
+    'cheese', 'sour cream', 'guacamole', 'queso blanco', 'fajita vegetables', 'fresh tomato salsa',
+    'roasted chili-corn salsa', 'tomatillo green-chili salsa', 'tomatillo red-chili salsa', 'romaine lettuce'
 ]
 
-st.header("🍽️ Choose Ingredients")
-selected_protein = st.selectbox("Choose protein:", proteins)
+selected_protein = st.selectbox("Choose your protein:", proteins)
 double_protein = st.checkbox("Double protein?")
-selected_grain = st.selectbox("Choose grain:", grains)
-selected_beans = st.selectbox("Choose beans:", beans)
-selected_toppings = st.multiselect("Choose toppings:", toppings)
+selected_grain = st.selectbox("Choose your grain:", grains)
+selected_beans = st.selectbox("Choose your beans:", beans)
+selected_toppings = st.multiselect("Choose your toppings:", toppings)
 
 selected_items = []
 if selected_protein != "None":
@@ -72,139 +61,130 @@ if selected_protein != "None":
     if double_protein:
         selected_items.append(selected_protein)
 if selected_grain != "None":
-    selected_items.extend(['white rice', 'brown rice'] if selected_grain == '1/2 white rice and 1/2 brown rice' else [selected_grain])
+    if selected_grain == '1/2 white rice and 1/2 brown rice':
+        selected_items.extend(['white rice', 'brown rice'])
+    else:
+        selected_items.append(selected_grain)
 if selected_beans != "None":
-    selected_items.extend(['black beans', 'pinto beans'] if selected_beans == 'both beans' else [selected_beans])
+    if selected_beans == 'both beans':
+        selected_items.extend(['black beans', 'pinto beans'])
+    else:
+        selected_items.append(selected_beans)
 selected_items.extend(selected_toppings)
 
-st.write(f"Meal: {', '.join(selected_items)}")
+st.write(f"Meal: {', '.join(selected_items) if selected_items else 'None selected'}")
 
-st.header("🏃 Exercise Info")
+#Section 4: Exercise Parameters
+st.header("🏃 Enter Your Exercise Info")
 gender = st.selectbox("Sex:", ["male", "female"])
-age = st.number_input("Age (years):", 10, 100, 25)
-weight_lbs = st.number_input("Weight (lbs):", 50.0, 400.0, 160.0)
-height_in = st.number_input("Height (inches):", 48.0, 84.0, 70.0)
-exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour")
+age = st.number_input("Age (years):", min_value=10, max_value=100, value=25)
+weight_lbs = st.number_input("Weight (lbs):", min_value=50.0, max_value=400.0, value=160.0)
+height_in = st.number_input("Height (inches):", min_value=48.0, max_value=84.0, value=70.0)
+exercise_query = st.text_input(
+    "What exercise did you do?",
+    "ran for 45 minutes",
+    help="Please include activity and duration (e.g., 'ran 45 minutes', 'swam 1 hour')"
+)
 
+# Convert units for API + validation
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
-if st.button("Calculate Nutrition + Exercise Balance"):
-    meal_totals, breakdown = calculate_total_nutrition(selected_items)
-
-    # Fix: handle duplicates and labeling
-    item_counts = Counter(selected_items)
-    seen = Counter()
-    display_labels = []
-    for item in selected_items:
-        seen[item] += 1
-        if item_counts[item] > 1:
-            display_labels.append(f"{item} x{seen[item]}")
-        else:
-            display_labels.append(item)
-
-    selected_df = pd.DataFrame([
-        chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].iloc[0].copy()
-        for item in selected_items
-        if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
-    ])
-    selected_df["Item"] = display_labels
-
-    numeric_cols = [
-        "Calories", "Total Fat (g)", "Saturated Fat (g)", "Cholesterol (mg)",
-        "Sodium (mg)", "Carbs (g)", "Fiber (g)", "Sugars (g)", "Protein (g)"
-    ]
-    total_row = selected_df[numeric_cols].sum().to_frame().T
-    total_row.insert(0, "Serving Size", "")
-    total_row.insert(0, "Item", "TOTAL")
-
-    table_display = pd.concat([selected_df, total_row], ignore_index=True)
-
-    # Get exercise calories from Nutritionix API
-    headers = {
-        "x-app-id": "df2ad93d",
-        "x-app-key": "569da6e33183ab78dd6b1cc27dc6edab",
-        "Content-Type": "application/json"
-    }
-    exercise_payload = {
-        "query": exercise_query,
-        "gender": gender,
-        "weight_kg": weight_kg,
-        "height_cm": height_cm,
-        "age": age
-    }
-    response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
-    exercise_data = response.json()
-
-    if "exercises" in exercise_data:
-        exercise_calories = sum(e["nf_calories"] for e in exercise_data["exercises"])
-        net_calories = meal_totals["Calories"] - exercise_calories
-
-        st.session_state.results = {
-            "meal_totals": meal_totals,
-            "exercise_calories": exercise_calories,
-            "net_calories": net_calories,
-            "table_display": table_display
-        }
-
-# Display Results
-if st.session_state.get("results"):
-    meal_totals = st.session_state.results["meal_totals"]
-    exercise_calories = st.session_state.results["exercise_calories"]
-    net_calories = st.session_state.results["net_calories"]
-    table_display = st.session_state.results["table_display"]
-
-    st.subheader("🍽️ Meal Nutrition Breakdown")
-    st.dataframe(
-        table_display.style
-        .set_properties(**{'border': '1px solid black', 'text-align': 'center'})
-        .apply(lambda x: ['font-weight: bold' if x.name == len(table_display)-1 else '' for _ in x], axis=1),
-        use_container_width=True
-    )
-
-    st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
-
-    st.subheader("🔥 Exercise Output")
-    st.write(f"Calories burned: {exercise_calories}")
-    st.info(f"⚖️ Net Calories (Meal - Exercise): {net_calories}")
-    st.markdown("🧠 _Baseline: 700 calories per meal is considered balanced._")
-
-    diff = net_calories - 700
-    if net_calories <= 700:
-        st.success(f"✅ Balanced: {abs(diff)} cal under or at baseline.")
-    elif net_calories <= 1000:
-        st.warning(f"🟡 Mild surplus: {diff} cal over 700 baseline.")
+# Section 5: if st.button("Calculate Nutrition + Exercise Balance"):
+    if not selected_items:
+        st.error("❌ Please select at least one ingredient.")
     else:
-        st.error(f"🔴 High surplus: {diff} cal over the 700-calorie mark.")
+        # Nutrition totals
+        meal_totals, breakdown_df = calculate_total_nutrition(selected_items)
 
-    st.subheader("📈 Weekly Calorie Projection")
-    weeks = st.slider("How many weeks?", 1, 12, 4)
-    frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
-    chart_data = []
-    for label, freq in frequencies.items():
-        for w in range(1, weeks + 1):
-            chart_data.append({
-                "Week": w,
-                "Cumulative Net Calories": net_calories * freq * w,
-                "Frequency": label
-            })
-    df_chart = pd.DataFrame(chart_data)
-    st.altair_chart(
-        alt.Chart(df_chart).mark_line(point=True).encode(
-            x="Week", y="Cumulative Net Calories", color="Frequency",
-            tooltip=["Week", "Cumulative Net Calories", "Frequency"]
-        ).properties(width=700, height=350).interactive(),
-        use_container_width=True
-    )
+        st.subheader("🍽️ Meal Nutrition Breakdown")
+        st.dataframe(breakdown_df.style.set_properties(**{
+            'border': '1px solid black', 'font-weight': 'bold'
+        }))
 
-    st.markdown("""
-    ### 📟 Net Calorie Thresholds
-    | Category | Net Calories | Description |
-    |----------|---------------|-------------|
-    | ✅ Balanced | ≤ 700 | Healthy meal range |
-    | 🟡 Mild Surplus | 701–1000 | Slightly over |
-    | 🔴 High Surplus | > 1000 | Adjust recommended |
-    """)
+        st.success(
+            f"Total: {meal_totals['Calories']} cal | "
+            f"Sodium: {meal_totals['Sodium (mg)']} mg | "
+            f"Protein: {meal_totals['Protein (g)']} g"
+        )
+
+        # Nutritionix API call for exercise
+        headers = {
+            "x-app-id": "df2ad93d",
+            "x-app-key": "569da6e33183ab78dd6b1cc27dc6edab",
+            "Content-Type": "application/json"
+        }
+        exercise_payload = {
+            "query": exercise_query,
+            "gender": gender,
+            "weight_kg": weight_kg,
+            "height_cm": height_cm,
+            "age": age
+        }
+        response = requests.post(
+            "https://trackapi.nutritionix.com/v2/natural/exercise",
+            headers=headers, json=exercise_payload
+        )
+        exercise_data = response.json()
+
+        if "exercises" in exercise_data:
+            activity = exercise_data["exercises"][0]
+            duration = activity["duration_min"]
+            activity_name = activity["name"]
+
+            # Get Nutritionix + validated values
+            nutritionix_cals = sum(e["nf_calories"] for e in exercise_data["exercises"])
+            validated_cals = burned_calories(activity_name, weight_kg=weight_kg, duration_min=duration)
+
+            st.subheader("🔥 Exercise Output")
+            st.write(f"Calories burned (Nutritionix): {round(nutritionix_cals)} cal")
+            st.write(f"Calories burned (Validated via `calories-burned`): {round(validated_cals)} cal")
+
+            net_nutritionix = meal_totals["Calories"] - nutritionix_cals
+            net_validated = meal_totals["Calories"] - validated_cals
+
+            st.info(f"Net Calories (Nutritionix): {round(net_nutritionix)}")
+            st.info(f"Net Calories (Validated): {round(net_validated)}")
+        else:
+            st.error("⚠️ Could not process exercise input. Try rephrasing.")
+
+#Section 6: Altair Chart
+import altair as alt
+
+st.subheader("📈 Cumulative Net Calories Over Time")
+
+weeks = st.slider("How many weeks do you want to project?", 1, 12, 4)
+
+frequencies = {
+    "Once a week": 1,
+    "3x per week": 3,
+    "Daily": 7
+}
+
+all_rows = []
+for label, freq in frequencies.items():
+    weekly_total = net_validated * freq
+    for wk in range(1, weeks + 1):
+        all_rows.append({
+            "Week": wk,
+            "Cumulative Net Calories": weekly_total * wk,
+            "Frequency": label
+        })
+
+chart_df = pd.DataFrame(all_rows)
+
+chart = alt.Chart(chart_df).mark_line(point=True).encode(
+    x="Week:O",
+    y="Cumulative Net Calories:Q",
+    color="Frequency:N",
+    tooltip=["Week", "Cumulative Net Calories", "Frequency"]
+).properties(
+    width=600,
+    height=300
+).interactive()
+
+st.altair_chart(chart, use_container_width=True)
+
 
 
         
