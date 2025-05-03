@@ -24,10 +24,13 @@ headers = {
 }
 
 # Ingredient options
-proteins = ['None', 'chicken', 'steak', 'sofritas']
-grains = ['None', 'white rice', 'brown rice']
-beans = ['None', 'black beans', 'pinto beans']
-toppings = ['cheese', 'sour cream', 'lettuce', 'guacamole', 'salsa', 'fajita veggies']
+proteins = ['None', 'chicken', 'double chicken', 'steak', 'double steak', 'barbacoa', 'carnitas', 'sofritas']
+grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
+beans = ['None', 'black beans', 'pinto beans', 'both beans']
+toppings = [
+    'cheese', 'sour cream', 'lettuce', 'guacamole', 'fresh tomato salsa', 'roasted chili-corn salsa',
+    'tomatillo-green chili salsa', 'tomatillo-red chili salsa', 'fajita veggies', 'queso blanco'
+]
 
 # Streamlit UI
 st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
@@ -95,21 +98,21 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             protein = sum(f["nf_protein"] for f in data["foods"])
             sodium = sum(f["nf_sodium"] for f in data["foods"])
 
-            st.success(f"🍽️ Meal: {calories:.0f} kcal | Protein: {protein:.1f} g | Sodium: {sodium:.0f} mg")
+            st.success(f"🍽️ Meal: {calories:.0f} calories | Protein: {protein:.1f} g | Sodium: {sodium:.0f} mg")
 
             # Show target feedback
             if calories > target_calories:
-                st.warning(f"⚠️ Calories exceed your target by {calories - target_calories:.0f} kcal")
+                st.warning(f"⚠️ Calories exceed your target by {calories - target_calories:.0f} calories")
             if protein < target_protein:
                 st.warning(f"💪 Protein is below your target by {target_protein - protein:.1f} g")
 
             # Exercise breakdown
             if "exercises" in exercise_data:
                 exercise_calories = sum(e["nf_calories"] for e in exercise_data["exercises"])
-                st.success(f"🔥 Calories burned through exercise: {exercise_calories:.0f} kcal")
+                st.success(f"🔥 Calories burned through exercise: {exercise_calories:.0f} calories")
 
                 net_calories = calories - exercise_calories
-                st.info(f"⚖️ Net Calories (meal - exercise): {net_calories:.0f} kcal")
+                st.info(f"⚖️ Net Calories (meal - exercise): {net_calories:.0f} calories")
 
                 if net_calories <= 0:
                     st.success("✅ You're in a calorie deficit — great job!")
