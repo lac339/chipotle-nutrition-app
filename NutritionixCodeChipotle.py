@@ -7,7 +7,7 @@ import altair as alt
 st.markdown('''
 <style>
 .stApp {
-background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
+background-image: url("https://github.com/lac339/chipotle-nutrition-app/blob/main/chipotleimage.png");
 background-size: cover;
 background-repeat: no-repeat;
 background-attachment: fixed;
