@@ -2,19 +2,33 @@ import streamlit as st
 import pandas as pd
 import requests
 import altair as alt
+import base64
+
+
+
+
+def get_base64_image(path):
+    with open(path, "rb") as img_file:
+        b64_encoded = base64.b64encode(img_file.read()).decode()
+    return f"data:image/png;base64,{b64_encoded}"
+
+bg_img = get_base64_image("chipotleimage.png")
 
 # ✅ Add custom background
-st.markdown('''
-<style>
-.stApp {
-background-image: url("background-image: url("https://github.com/lac339/chipotle-nutrition-app/blob/main/chipotleimage.png");
-");
-background-size: cover;
-background-repeat: no-repeat;
-background-attachment: fixed;
-}
-</style>
-''', unsafe_allow_html=True)
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background-image: url("{bg_img}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ✅ Load and round Chipotle nutrition data
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
