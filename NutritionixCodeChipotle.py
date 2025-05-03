@@ -128,14 +128,13 @@ if st.button("Calculate Nutrition + Exercise Balance"):
                 net_calories = calories - exercise_calories
                 st.info(f"⚖️ Net Calories (meal - exercise): {net_calories:.0f} calories")
 
-                if net_calories <= 0:
-                    st.success("✅ You're in a calorie deficit — great job!")
-                elif net_calories <= 150:
-                    st.success("🟢 Balanced — slight surplus, still in a healthy range.")
-                elif net_calories <= 400:
-                    st.warning("🟡 Mild surplus — monitor depending on your goals.")
+                net_vs_target = net_calories - target_calories
+                if net_calories <= 700:
+                    st.success(f"✅ You're within the balanced 700-calorie range. You are {abs(net_vs_target):.0f} calories {'under' if net_vs_target < 0 else 'at'} the target.")
+                elif net_calories > 700 and net_calories <= 1000:
+                    st.warning(f"🟡 Mild surplus — {net_vs_target:.0f} calories over the 700-calorie baseline.")
                 else:
-                    st.error("🔴 Significant surplus — consider adjusting ingredients or activity.")
+                    st.error(f"🔴 Significant surplus — {net_vs_target:.0f} calories over the 700-calorie baseline. Consider adjusting.")
             else:
                 st.error("⚠️ Could not calculate exercise info. Please check your activity description.")
         else:
@@ -144,12 +143,12 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         st.markdown("---")
         st.subheader("📊 Surplus Feedback Thresholds")
         df = pd.DataFrame({
-            "Range (calories)": ["≤ 0", "1 – 150", "151 – 400", "> 400"],
+            "Net Calories": ["≤ 700", "701 – 1000", "> 1000"],
             "Feedback": [
-                "✅ Calorie deficit — great job!",
-                "🟢 Balanced — slight surplus",
+                "✅ Balanced — within target range",
                 "🟡 Mild surplus — monitor",
                 "🔴 Significant surplus — adjust"
             ]
         })
         st.table(df)
+
