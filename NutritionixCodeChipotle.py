@@ -69,7 +69,9 @@ toppings = [
 
 st.header("\U0001F37D\ufe0f Choose Ingredients")
 selected_protein = st.selectbox("Choose protein:", proteins)
-double_protein = st.checkbox("Double protein?")
+double_protein = False
+if selected_protein != "None":
+    double_protein = st.checkbox("Double protein?")
 selected_grain = st.selectbox("Choose grain:", grains)
 selected_beans = st.selectbox("Choose beans:", beans)
 selected_toppings = st.multiselect("Choose toppings:", toppings)
