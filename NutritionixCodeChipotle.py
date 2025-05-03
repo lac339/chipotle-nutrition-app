@@ -25,9 +25,6 @@ chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
 numeric_columns = chipotle_df.select_dtypes(include='number').columns
 chipotle_df[numeric_columns] = chipotle_df[numeric_columns].round(0).astype(int)
 
-if "results" not in st.session_state:
-    st.session_state.results = {}
-
 def get_chipotle_nutrition(item_name):
     match = chipotle_df[chipotle_df['Item'].str.lower() == item_name.lower()]
     return match.iloc[0].to_dict() if not match.empty else None
@@ -103,6 +100,7 @@ height_cm = height_in * 2.54
 if st.button("Calculate Nutrition + Exercise Balance"):
     meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
+    # Handle item labeling
     item_counts = Counter(selected_items)
     seen = Counter()
     display_labels = []
@@ -129,10 +127,15 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     total_row.insert(0, "Item", "TOTAL")
     table_display = pd.concat([selected_df, total_row], ignore_index=True)
 
-    # Nutritionix NLP Call
+    # Display nutrition breakdown
+    st.subheader("🍽️ Meal Nutrition Breakdown")
+    st.dataframe(table_display, use_container_width=True)
+    st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
+
+    # Call Nutritionix NLP
     headers = {
-        "x-app-id": "your-app-id",
-        "x-app-key": "your-app-key",
+        "x-app-id": "your-app-id",  # Replace with your actual ID
+        "x-app-key": "your-app-key",  # Replace with your actual key
         "Content-Type": "application/json"
     }
     exercise_payload = {
@@ -145,102 +148,33 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
     exercise_data = response.json()
 
-if "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-    exercise = exercise_data["exercises"][0]
-    duration = exercise.get("duration_min", 60)
-    exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+    fallback_duration = 60
 
-    # Use NLP result if it's positive; otherwise, fallback to local estimate
-    if exercise_calories_nlp > 0:
-        exercise_calories = exercise_calories_nlp
+    if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
+        exercise = exercise_data["exercises"][0]
+        duration = exercise.get("duration_min", fallback_duration)
+        exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+
+        if exercise_calories_nlp > 0:
+            exercise_calories = exercise_calories_nlp
+        else:
+            exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
+
+        exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
         net_calories = meal_totals["Calories"] - exercise_calories
+
+        st.subheader("🔥 Exercise Output")
+        st.write(f"Calories burned (Nutritionix NLP): {exercise_calories_nlp}")
+        st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
+        st.success(f"Calories used in balance: {exercise_calories}")
+        st.info(f"Net Calories: {net_calories}")
+
     else:
-        exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-        net_calories = meal_totals["Calories"] - exercise_calories
+        duration = fallback_duration
+        exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
+        net_calories_local = meal_totals["Calories"] - exercise_calories_local
 
-    exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
-    net_calories_local = meal_totals["Calories"] - exercise_calories_local
-
-    # Display results directly
-    st.subheader("🔥 Exercise Output")
-    st.write(f"Calories burned (Nutritionix NLP): {exercise_calories_nlp}")
-    st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
-    st.success(f"Calories used in balance: {exercise_calories}")
-    st.info(f"Net Calories: {net_calories}")
-
-else:
-    # No NLP data available — fallback fully to local estimate
-    duration = 60
-    exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
-    net_calories_local = meal_totals["Calories"] - exercise_calories_local
-
-    st.warning("⚠️ Nutritionix NLP failed to parse your input. Using local estimate instead.")
-
-    # Display fallback results directly
-    st.subheader("🔥 Exercise Output")
-    st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
-    st.info(f"Net Calories: {net_calories_local}")
-
-
-# Display Results
-if st.session_state.get("results"):
-    meal_totals = st.session_state.results["meal_totals"]
-    exercise_calories_nlp = st.session_state.results["exercise_calories_nlp"]
-    exercise_calories_local = st.session_state.results["exercise_calories_local"]
-    net_calories_nlp = st.session_state.results["net_calories_nlp"]
-    net_calories_local = st.session_state.results["net_calories_local"]
-    table_display = st.session_state.results["table_display"]
-
-    st.subheader("🍽️ Meal Nutrition Breakdown")
-    st.dataframe(
-        table_display.style
-        .set_properties(**{'border': '1px solid black', 'text-align': 'center'})
-        .apply(lambda x: ['font-weight: bold' if x.name == len(table_display)-1 else '' for _ in x], axis=1),
-        use_container_width=True
-    )
-
-    st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
-
-    st.subheader("🔥 Exercise Output")
-    st.write(f"Calories burned (Nutritionix NLP): {exercise_calories_nlp}")
-    st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
-    st.info(f"Net Calories (NLP): {net_calories_nlp}")
-    st.info(f"Net Calories (Local): {net_calories_local}")
-    st.markdown("🧠 _Baseline: 700 calories per meal is considered balanced._")
-
-    diff = net_calories_nlp - 700
-    if net_calories_nlp <= 700:
-        st.success(f"✅ Balanced: {abs(diff)} cal under or at baseline.")
-    elif net_calories_nlp <= 1000:
-        st.warning(f"🟡 Mild surplus: {diff} cal over 700 baseline.")
-    else:
-        st.error(f"🔴 High surplus: {diff} cal over the 700-calorie mark.")
-
-    st.subheader("📈 Weekly Calorie Projection")
-    weeks = st.slider("How many weeks?", 1, 12, 4)
-    frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
-    chart_data = []
-    for label, freq in frequencies.items():
-        for w in range(1, weeks + 1):
-            chart_data.append({
-                "Week": w,
-                "Cumulative Net Calories": net_calories_nlp * freq * w,
-                "Frequency": label
-            })
-    df_chart = pd.DataFrame(chart_data)
-    st.altair_chart(
-        alt.Chart(df_chart).mark_line(point=True).encode(
-            x="Week", y="Cumulative Net Calories", color="Frequency",
-            tooltip=["Week", "Cumulative Net Calories", "Frequency"]
-        ).properties(width=700, height=350).interactive(),
-        use_container_width=True
-    )
-
-    st.markdown("""
-    ### 📟 Net Calorie Thresholds
-    | Category | Net Calories | Description |
-    |----------|---------------|-------------|
-    | ✅ Balanced | ≤ 700 | Healthy meal range |
-    | 🟡 Mild Surplus | 701–1000 | Slightly over |
-    | 🔴 High Surplus | > 1000 | Adjust recommended |
-    """)
+        st.warning("⚠️ Nutritionix NLP failed. Using local estimate instead.")
+        st.subheader("🔥 Exercise Output")
+        st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
+        st.info(f"Net Calories: {net_calories_local}")
