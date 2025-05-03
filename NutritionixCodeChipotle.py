@@ -5,17 +5,17 @@ import requests
 page_bg_img = f'''
 <style>
 .stApp {{
-    background-image: url("https://imageio.forbes.com/specials-images/imageserve/1212846835/0x0.jpg?format=jpg&width=1200");
+    background-image: url("https://wallpapercat.com/w/full/8/b/5/1255230-2000x1244-desktop-hd-chipotle-background-image.jpg");
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    color: #f2f2f2;
+    color: #000000;
 }}
 
 /* Adjust font and container styling for contrast */
 html, body, [class*="css"]  {{
-    color: #f2f2f2;
-    background-color: rgba(0, 0, 0, 0.6);
+    color: #000000;
+    background-color: rgba(255, 255, 255, 0.7);
     font-family: 'Arial', sans-serif;
 }}
 </style>
@@ -135,3 +135,4 @@ if st.button("Calculate Nutrition + Exercise Balance"):
                 st.error("⚠️ Could not calculate exercise info. Please check your activity description.")
         else:
             st.error(f"⚠️ Could not fetch nutrition info. API said: {data.get('message', 'Unknown error')}")
+
