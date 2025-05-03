@@ -94,7 +94,6 @@ weight_lbs = st.number_input("Weight (lbs):", 50.0, 400.0, 160.0)
 height_in = st.number_input("Height (inches):", 48.0, 84.0, 70.0)
 exercise_choice = st.selectbox("Choose exercise (for validation):", ["walk", "run", "bike", "lift", "yoga", "swim", "dance", "hike", "row", "elliptical"])
 duration_min = st.number_input("Duration (minutes):", 1, 300, 60)
-exercise_query = st.text_input("Or describe your exercise:", "walked for 1 hour")
 
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
@@ -139,7 +138,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         "Content-Type": "application/json"
     }
     exercise_payload = {
-        "query": exercise_query,
+        "query": exercise_choice,
         "gender": gender,
         "weight_kg": weight_kg,
         "height_cm": height_cm,
