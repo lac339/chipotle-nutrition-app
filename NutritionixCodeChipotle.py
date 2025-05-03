@@ -173,7 +173,6 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             duration = fallback_duration
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
             net_calories = meal_totals["Calories"] - exercise_calories
-            st.warning("⚠️ Nutritionix NLP failed. Using local estimate instead.")
 
         # Save values for persistent chart
         st.session_state["net_calories"] = net_calories
