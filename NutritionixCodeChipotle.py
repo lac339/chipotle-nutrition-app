@@ -16,6 +16,13 @@ html, body, [class*="css"]  {{
     color: #111111;
     font-family: 'Arial', sans-serif;
 }}
+
+/* Fix button styling */
+button[kind="primary"] {{
+    background-color: #ffffff !important;
+    color: #111111 !important;
+    border: 1px solid #ccc;
+}}
 </style>
 '''
 st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -133,5 +140,4 @@ if st.button("Calculate Nutrition + Exercise Balance"):
                 st.error("⚠️ Could not calculate exercise info. Please check your activity description.")
         else:
             st.error(f"⚠️ Could not fetch nutrition info. API said: {data.get('message', 'Unknown error')}")
-
 
