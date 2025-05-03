@@ -171,7 +171,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
 # Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
-    st.subheader("📈 Weekly Calorie Projection")
+    st.subheader("📈 Weekly Calorie + Exercise Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
     frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
 
