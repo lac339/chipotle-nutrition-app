@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 
 # Load official Chipotle nutrition data from CSV
-chipotle_df = pd.read_csv("/mnt/data/chipotle_nutrition_2025_complete.csv")
+chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
 
 def get_chipotle_nutrition(item_name):
     match = chipotle_df[chipotle_df['Item'].str.lower() == item_name.lower()]
