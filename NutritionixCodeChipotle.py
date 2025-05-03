@@ -92,8 +92,13 @@ gender = st.selectbox("Sex:", ["male", "female"])
 age = st.number_input("Age (years):", 10, 100, 25)
 weight_lbs = st.number_input("Weight (lbs):", 50.0, 400.0, 160.0)
 height_in = st.number_input("Height (inches):", 48.0, 84.0, 70.0)
-exercise_choice = st.selectbox("Choose exercise (for validation):", ["walk", "run", "bike", "lift", "yoga", "swim", "dance", "hike", "row", "elliptical"])
-duration_min = st.number_input("Duration (minutes):", 1, 300, 60)
+exercise_options = ["None", "walk", "run", "bike", "lift", "yoga", "swim", "dance", "hike", "row", "elliptical"]
+exercise_choice = st.selectbox("Choose exercise (for validation):", exercise_options)
+
+if exercise_choice != "None":
+    duration_min = st.number_input("Duration (minutes):", 1, 300, 60)
+else:
+    duration_min = 0
 
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
@@ -131,26 +136,28 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     st.dataframe(table_display, use_container_width=True)
     st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
-    # Nutritionix NLP
-    headers = {
-        "x-app-id": "your-app-id",
-        "x-app-key": "your-app-key",
-        "Content-Type": "application/json"
-    }
-    exercise_payload = {
-        "query": exercise_choice,
-        "gender": gender,
-        "weight_kg": weight_kg,
-        "height_cm": height_cm,
-        "age": age
-    }
-    response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
-    exercise_data = response.json()
+    exercise_calories = 0
+    if exercise_choice != "None":
+        # Nutritionix NLP
+        headers = {
+            "x-app-id": "your-app-id",
+            "x-app-key": "your-app-key",
+            "Content-Type": "application/json"
+        }
+        exercise_payload = {
+            "query": exercise_choice,
+            "gender": gender,
+            "weight_kg": weight_kg,
+            "height_cm": height_cm,
+            "age": age
+        }
+        response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
+        exercise_data = response.json()
 
-    if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-        exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
-    else:
-        exercise_calories = calories_burned_local(exercise_choice, weight_kg, duration_min)
+        if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
+            exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+        else:
+            exercise_calories = calories_burned_local(exercise_choice, weight_kg, duration_min)
 
     net_calories = meal_totals["Calories"] - exercise_calories
 
