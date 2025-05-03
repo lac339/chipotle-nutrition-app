@@ -24,7 +24,7 @@ headers = {
 }
 
 # Ingredient options
-proteins = ['None', 'chicken', 'double chicken', 'steak', 'double steak', 'barbacoa', 'carnitas', 'sofritas']
+proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
 grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
 beans = ['None', 'black beans', 'pinto beans', 'both beans']
 toppings = [
@@ -37,6 +37,7 @@ st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
 
 st.header("🍽️ Choose Your Ingredients")
 selected_protein = st.selectbox("Choose your protein:", proteins)
+double_protein = st.checkbox("Double protein?")
 selected_grain = st.selectbox("Choose your grain:", grains)
 selected_beans = st.selectbox("Choose your beans:", beans)
 selected_toppings = st.multiselect("Choose your toppings:", toppings)
@@ -45,6 +46,8 @@ selected_toppings = st.multiselect("Choose your toppings:", toppings)
 query_parts = []
 if selected_protein != "None":
     query_parts.append(selected_protein)
+    if double_protein:
+        query_parts.append(selected_protein)  # Add it again to simulate double portion
 if selected_grain != "None":
     query_parts.append(selected_grain)
 if selected_beans != "None":
