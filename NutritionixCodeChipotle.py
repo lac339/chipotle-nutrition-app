@@ -25,7 +25,7 @@ def calculate_total_nutrition(selected_items):
 
 # Inject background
 st.markdown('''<style>.stApp {
-background-image: url("https://logos-world.net/wp-content/uploads/2020/06/Chipotle-Symbol.jpg");
+background-image: url("ChatGPT Image May 2, 2025, 11_35_14 PM.png");
 background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
 }</style>''', unsafe_allow_html=True)
 
