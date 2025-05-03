@@ -44,6 +44,15 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
+def calories_burned_local(activity, weight_kg, duration_min):
+    METS = {
+        "walk": 3.5, "run": 9.8, "bike": 7.5, "lift": 6.0, "yoga": 2.5,
+        "swim": 5.8, "dance": 4.8, "hike": 6.0, "row": 7.0, "elliptical": 5.0
+    }
+    key = activity.lower().split()[0]
+    met = METS.get(key, 3.5)
+    return round(met * weight_kg * (duration_min / 60), 2)
+
 # UI
 st.title("\U0001F32F Chipotle Bowl + Fitness Analyzer")
 
@@ -83,7 +92,9 @@ gender = st.selectbox("Sex:", ["male", "female"])
 age = st.number_input("Age (years):", 10, 100, 25)
 weight_lbs = st.number_input("Weight (lbs):", 50.0, 400.0, 160.0)
 height_in = st.number_input("Height (inches):", 48.0, 84.0, 70.0)
-exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour")
+exercise_choice = st.selectbox("Choose exercise (for validation):", ["walk", "run", "bike", "lift", "yoga", "swim", "dance", "hike", "row", "elliptical"])
+duration_min = st.number_input("Duration (minutes):", 1, 300, 60)
+exercise_query = st.text_input("Or describe your exercise:", "walked for 1 hour")
 
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
@@ -121,7 +132,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     st.dataframe(table_display, use_container_width=True)
     st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
-    # Nutritionix NLP only
+    # Nutritionix NLP
     headers = {
         "x-app-id": "your-app-id",
         "x-app-key": "your-app-key",
@@ -139,11 +150,10 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
     if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
         exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
-        net_calories = meal_totals["Calories"] - exercise_calories
     else:
-        st.error("⚠️ Nutritionix could not parse your exercise input. Try simplifying the phrase.")
-        exercise_calories = 0
-        net_calories = meal_totals["Calories"]
+        exercise_calories = calories_burned_local(exercise_choice, weight_kg, duration_min)
+
+    net_calories = meal_totals["Calories"] - exercise_calories
 
     st.session_state["net_calories"] = net_calories
     st.session_state["meal_totals"] = meal_totals
