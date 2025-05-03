@@ -206,3 +206,4 @@ if "net_calories" in st.session_state and "meal_totals" in st.session_state:
     | ✅ Balanced | ≤ 700 | Healthy meal range |
     | 🟡 Mild Surplus | 701–1000 | Slightly over |
     | 🔴 High S
+    """)
