@@ -93,7 +93,7 @@ height_cm = height_in * 2.54
 # Section 5: if st.button("Calculate Nutrition + Exercise Balance"):
 if not selected_items:
         st.error("❌ Please select at least one ingredient.")
-    else:
+else:
         # Nutrition totals
         meal_totals, breakdown_df = calculate_total_nutrition(selected_items)
 
