@@ -100,29 +100,73 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 if st.button("Calculate Nutrition + Exercise Balance"):
-    
-        meal_totals, breakdown = calculate_total_nutrition(selected_items)
+    meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
-        item_counts = Counter(selected_items)
-        seen = Counter()
-        display_labels = []
-        for item in selected_items:
-            seen[item] += 1
-            if item_counts[item] > 1:
-                display_labels.append(f"{item} x{seen[item]}")
-            else:
-    duration = fallback_duration
-    exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-    net_calories = meal_totals["Calories"] - exercise_calories
+    item_counts = Counter(selected_items)
+    seen = Counter()
+    display_labels = []
+    for item in selected_items:
+        seen[item] += 1
+        if item_counts[item] > 1:
+            display_labels.append(f"{item} x{seen[item]}")
+        else:
+            display_labels.append(item)
 
-        # Save values for persistent chart
-        st.session_state["net_calories"] = net_calories
-        st.session_state["meal_totals"] = meal_totals
-        st.session_state["table_display"] = table_display
+    selected_df = pd.DataFrame([
+        chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].iloc[0].copy()
+        for item in selected_items
+        if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
+    ])
+    selected_df["Item"] = display_labels
 
-        st.subheader("\U0001F525 Exercise Output")
-        st.write(f"Calories burned: {exercise_calories}")
-        st.info(f"Net Calories: {net_calories}")
+    numeric_cols = [
+        "Calories", "Protein (g)", "Sodium (mg)", "Fiber (g)", "Cholesterol (mg)",
+        "Total Fat (g)", "Saturated Fat (g)", "Carbs (g)", "Sugars (g)"
+    ]
+    total_row = selected_df[numeric_cols].sum().to_frame().T
+    total_row.insert(0, "Serving Size", "")
+    total_row.insert(0, "Item", "TOTAL")
+    table_display = pd.concat([selected_df, total_row], ignore_index=True)
+
+    st.subheader("🍽️ Meal Nutrition Breakdown")
+    st.dataframe(table_display, use_container_width=True)
+    st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
+
+    # Nutritionix NLP
+    headers = {
+        "x-app-id": "your-app-id",
+        "x-app-key": "your-app-key",
+        "Content-Type": "application/json"
+    }
+    exercise_payload = {
+        "query": exercise_query,
+        "gender": gender,
+        "weight_kg": weight_kg,
+        "height_cm": height_cm,
+        "age": age
+    }
+    response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
+    exercise_data = response.json()
+    fallback_duration = 60
+
+    if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
+        exercise = exercise_data["exercises"][0]
+        duration = exercise.get("duration_min", fallback_duration)
+        exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+        exercise_calories = exercise_calories_nlp
+        net_calories = meal_totals["Calories"] - exercise_calories
+    else:
+        duration = fallback_duration
+        exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
+        net_calories = meal_totals["Calories"] - exercise_calories
+
+    st.session_state["net_calories"] = net_calories
+    st.session_state["meal_totals"] = meal_totals
+    st.session_state["table_display"] = table_display
+
+    st.subheader("🔥 Exercise Output")
+    st.write(f"Calories burned: {exercise_calories}")
+    st.info(f"Net Calories: {net_calories}")
 
 # Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
