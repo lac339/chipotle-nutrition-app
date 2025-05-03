@@ -119,8 +119,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             # Altair chart: Projected net calorie accumulation
             import altair as alt
             st.subheader("📈 Projected Net Calories Over Time")
-            with st.expander("📅 Visualize long-term impact"):
-                weeks = st.slider("Over how many weeks?", 1, 12, 4)
+            weeks = st.slider("📅 Over how many weeks?", 1, 12, 4)
 
             frequencies = {
                 "Once a week": 1,
@@ -165,6 +164,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             | 🟡 Mild Surplus | 701–1000 | Slightly over — okay depending on your goals |
             | 🔴 High Surplus | > 1000 | Exceeds typical meal target — adjust suggested |
             """)
+
+        
 
         
 
