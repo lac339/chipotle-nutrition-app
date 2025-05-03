@@ -5,7 +5,7 @@ import requests
 page_bg_img = f'''
 <style>
 .stApp {{
-background-image: url("https://vectorified.com/image/chipotle-logo-vector-15.jpg");
+background-image: url("https://imageio.forbes.com/specials-images/imageserve/1212846835/0x0.jpg?format=jpg&width=1200");
 background-size: cover;
 background-repeat: no-repeat;
 background-attachment: fixed;
