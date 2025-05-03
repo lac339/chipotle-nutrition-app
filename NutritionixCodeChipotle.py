@@ -123,6 +123,16 @@ if st.button("Calculate Nutrition + Exercise Balance"):
                 st.warning(f"🟡 Mild surplus — {diff} calories over the target.")
             else:
                 st.error(f"🔴 Significant surplus — {diff} calories over the 700-calorie mark.")
+
+            st.markdown("""
+            ### 🧾 Net Calorie Thresholds Table
+            | Category | Net Calories | Description |
+            |----------|---------------|-------------|
+            | ✅ Balanced | ≤ 700 | Healthy, within standard meal range |
+            | 🟡 Mild Surplus | 701–1000 | Slightly over — okay depending on your goals |
+            | 🔴 High Surplus | > 1000 | Exceeds typical meal target — adjust suggested |
+            """)
+
         else:
             st.error("⚠️ Could not calculate exercise info. Check activity description.")
 
