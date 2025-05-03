@@ -56,18 +56,18 @@ def calories_burned_local(activity, weight_kg, duration_min):
     return round(met * weight_kg * (duration_min / 60), 2)
 
 # UI
-st.title("🌯 Chipotle Bowl + Fitness Analyzer")
+st.title("\U0001F32F Chipotle Bowl + Fitness Analyzer")
 
-proteins = ['chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
-grains = ['white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
-beans = ['black beans', 'pinto beans', 'both beans']
+proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
+grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
+beans = ['None', 'black beans', 'pinto beans', 'both beans']
 toppings = [
     'cheese', 'sour cream', 'guacamole', 'queso blanco', 'fajita vegetables',
     'fresh tomato salsa', 'roasted chili-corn salsa', 'tomatillo green-chili salsa',
     'tomatillo red-chili salsa', 'romaine lettuce'
 ]
 
-st.header("🍽️ Choose Ingredients")
+st.header("\U0001F37D\ufe0f Choose Ingredients")
 selected_protein = st.selectbox("Choose protein:", proteins)
 double_protein = st.checkbox("Double protein?")
 selected_grain = st.selectbox("Choose grain:", grains)
@@ -87,7 +87,7 @@ selected_items.extend(selected_toppings)
 
 st.write(f"Meal: {', '.join(selected_items)}")
 
-st.header("🏃 Exercise Info")
+st.header("\U0001F3C3 Exercise Info")
 gender = st.selectbox("Sex:", ["male", "female"])
 age = st.number_input("Age (years):", 10, 100, 25)
 weight_lbs = st.number_input("Weight (lbs):", 50.0, 400.0, 160.0)
@@ -98,7 +98,6 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 if st.button("Calculate Nutrition + Exercise Balance"):
-    # ✅ Validation check for required inputs
     if (
         selected_protein == "None"
         or selected_grain == "None"
@@ -106,7 +105,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         or len(selected_toppings) == 0
         or exercise_query.strip() == ""
     ):
-        st.error("⚠️ Please fill out all required fields: choose protein, grain, beans, at least one topping, and enter an exercise.")
+        st.error("\u26a0\ufe0f Please fill out all required fields: choose protein, grain, beans, at least one topping, and enter an exercise.")
     else:
         meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
@@ -136,9 +135,9 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         total_row.insert(0, "Item", "TOTAL")
         table_display = pd.concat([selected_df, total_row], ignore_index=True)
 
-        st.subheader("🍽️ Meal Nutrition Breakdown")
+        st.subheader("\U0001F37D\ufe0f Meal Nutrition Breakdown")
         st.dataframe(table_display, use_container_width=True)
-        st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
+        st.success(f"\u2705 Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
         # Nutritionix NLP
         headers = {
@@ -179,13 +178,13 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         st.session_state["meal_totals"] = meal_totals
         st.session_state["table_display"] = table_display
 
-        st.subheader("🔥 Exercise Output")
+        st.subheader("\U0001F525 Exercise Output")
         st.write(f"Calories burned: {exercise_calories}")
         st.info(f"Net Calories: {net_calories}")
 
 # Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
-    st.subheader("📈 Weekly Calorie Projection")
+    st.subheader("\U0001F4C8 Weekly Calorie Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
     frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
 
@@ -209,7 +208,7 @@ if "net_calories" in st.session_state and "meal_totals" in st.session_state:
     )
 
     st.markdown("""
-    ### 📟 Net Calorie Thresholds
+    ### 🔏 Net Calorie Thresholds
     | Category | Net Calories | Description |
     |----------|---------------|-------------|
     | ✅ Balanced | ≤ 700 | Healthy meal range |
