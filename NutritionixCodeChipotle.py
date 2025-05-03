@@ -5,7 +5,7 @@ import altair as alt
 import base64
 from collections import Counter
 
-#background image using hosted image
+# Optional: background image using hosted image
 st.markdown(
     f"""
     <style>
@@ -20,7 +20,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ✅ Load and round Chipotle nutrition data
+# Load and round Chipotle nutrition data
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
 numeric_columns = chipotle_df.select_dtypes(include='number').columns
 chipotle_df[numeric_columns] = chipotle_df[numeric_columns].round(0).astype(int)
@@ -47,7 +47,7 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
-# 🎯 UI
+# UI
 st.title("🌯 Chipotle Bowl + Fitness Analyzer")
 
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
@@ -108,7 +108,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         for item in selected_items
         if not chipotle_df[chipotle_df['Item'].str.lower() == item.lower()].empty
     ])
-    selected_df.insert(0, "Item", display_labels)
+    selected_df["Item"] = display_labels
 
     numeric_cols = [
         "Calories", "Total Fat (g)", "Saturated Fat (g)", "Cholesterol (mg)",
@@ -147,7 +147,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             "table_display": table_display
         }
 
-# 🎯 Display Results
+# Display Results
 if st.session_state.get("results"):
     meal_totals = st.session_state.results["meal_totals"]
     exercise_calories = st.session_state.results["exercise_calories"]
@@ -198,12 +198,13 @@ if st.session_state.get("results"):
     )
 
     st.markdown("""
-    ### 🧾 Net Calorie Thresholds
+    ### 📟 Net Calorie Thresholds
     | Category | Net Calories | Description |
     |----------|---------------|-------------|
     | ✅ Balanced | ≤ 700 | Healthy meal range |
     | 🟡 Mild Surplus | 701–1000 | Slightly over |
     | 🔴 High Surplus | > 1000 | Adjust recommended |
     """)
+
 
         
