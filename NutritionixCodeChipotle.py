@@ -24,10 +24,10 @@ def calculate_total_nutrition(selected_items):
     return total, breakdown
 
 # Inject background
-#st.markdown('''<style>.stApp {
-#background-image: url("https://imageio.forbes.com/specials-images/imageserve/1212846835/0x0.jpg?format=jpg&width=1200");
-#background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
-#}</style>''', unsafe_allow_html=True)
+st.markdown('''<style>.stApp {
+background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
+background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
+}</style>''', unsafe_allow_html=True)
 
 # Ingredient categories
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
