@@ -1,21 +1,19 @@
 import streamlit as st
 import requests
 
-# Inject custom background image and adjust text color for readability
+# Inject custom background image and apply a white overlay and black text
 page_bg_img = f'''
 <style>
 .stApp {{
-    background-image: url("https://wallpapercat.com/w/full/8/b/5/1255230-2000x1244-desktop-hd-chipotle-background-image.jpg");
+    background-image: url("https://imageio.forbes.com/specials-images/imageserve/1212846835/0x0.jpg?format=jpg&width=1200");
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    color: #000000;
 }}
 
-/* Adjust font and container styling for contrast */
 html, body, [class*="css"]  {{
-    color: #000000;
-    background-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #111111;
     font-family: 'Arial', sans-serif;
 }}
 </style>
@@ -135,4 +133,5 @@ if st.button("Calculate Nutrition + Exercise Balance"):
                 st.error("⚠️ Could not calculate exercise info. Please check your activity description.")
         else:
             st.error(f"⚠️ Could not fetch nutrition info. API said: {data.get('message', 'Unknown error')}")
+
 
