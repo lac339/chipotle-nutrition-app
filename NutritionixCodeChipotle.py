@@ -5,7 +5,7 @@ import requests
 page_bg_img = f'''
 <style>
 .stApp {{
-background-image: url("https://wallpapercat.com/w/full/8/b/5/1255230-2000x1244-desktop-hd-chipotle-background-image.jpg");
+background-image: url("https://images.search.yahoo.com/search/images;_ylt=AwrFaM29YRVoISEGOSNXNyoA;_ylu=Y29sbwNiZjEEcG9zAzEEdnRpZAMEc2VjA3BpdnM-?p=chipotle+logo&fr2=piv-web&type=E210US0G0&fr=mcafee#id=16&iurl=https%3A%2F%2Fcdn.abcotvs.com%2Fdip%2Fimages%2F3513562_AP_chipotle-img.jpg%3Fw%3D1280%26r%3D16%3A9&action=click");
 background-size: cover;
 background-repeat: no-repeat;
 background-attachment: fixed;
