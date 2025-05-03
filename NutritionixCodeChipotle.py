@@ -44,15 +44,23 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
-from calories_burned import burned_calories
-
 def calories_burned_local(activity, weight_kg, duration_min):
-    try:
-        return burned_calories(
-            activity=activity,
-            weight_kg=weight_kg,
-            duration_minutes=duration_min
-        )
+    METS = {
+        "walking": 3.5, "running": 9.8, "bicycling": 7.5, "weightlifting": 6.0,
+        "yoga": 2.5, "swimming": 8.0, "dancing": 7.8, "elliptical": 5.0,
+        "hiking": 6.0, "aerobics": 7.3, "basketball": 8.0, "soccer": 10.0,
+        "tennis": 8.0, "boxing": 12.0, "skateboarding": 5.0, "skiing": 7.0,
+        "rowing": 7.0, "jumping jacks": 8.0, "pilates": 3.0, "climbing": 9.5,
+        "stairs": 4.0, "stretching": 2.3, "tai chi": 3.0, "pushups": 8.0,
+        "pullups": 8.0, "plank": 3.3, "jump rope": 12.3, "martial arts": 10.3,
+        "surfing": 5.0, "volleyball": 4.0, "softball": 5.0, "baseball": 5.0,
+        "golf": 4.8, "rugby": 11.0, "lacrosse": 10.0, "horseback riding": 5.5,
+        "kayaking": 5.0, "skating": 7.0, "fencing": 6.0, "gardening": 3.8,
+        "mowing lawn": 5.5, "housework": 3.0, "cleaning": 3.5, "jumping": 8.5
+    }
+    key = activity.lower().split()[0]
+    met = METS.get(key, 3.5)
+    return round(met * weight_kg * (duration_min / 60), 2)
     except Exception:
         return 3.5 * weight_kg * (duration_min / 60)
 
