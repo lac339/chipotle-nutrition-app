@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import pandas as pd
 
 # Inject custom background image and apply a white overlay and black text
 page_bg_img = f'''
@@ -60,7 +61,7 @@ query_parts = []
 if selected_protein != "None":
     query_parts.append(selected_protein)
     if double_protein:
-        query_parts.append(selected_protein)  # Add it again to simulate double portion
+        query_parts.append(selected_protein)
 if selected_grain != "None":
     query_parts.append(selected_grain)
 if selected_beans != "None":
@@ -79,8 +80,9 @@ height_in = st.number_input("Height (inches):", min_value=48.0, max_value=84.0, 
 exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour")
 
 st.header("🎯 Set Your Nutrition Targets")
-target_calories = st.slider("Target Calories:", min_value=200, max_value=2000, value=700, step=50)
+target_calories = 700  # Fixed benchmark for standard meal
 target_protein = st.slider("Target Protein (grams):", min_value=10, max_value=100, value=30, step=5)
+st.markdown("_We use 700 calories as a general benchmark for a balanced meal. A slight surplus isn’t bad — it depends on your activity level and goals._")
 
 # Convert to metric
 weight_kg = weight_lbs * 0.453592
@@ -116,13 +118,9 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
             st.success(f"🍽️ Meal: {calories:.0f} calories | Protein: {protein:.1f} g | Sodium: {sodium:.0f} mg")
 
-            # Show target feedback
-            if calories > target_calories:
-                st.warning(f"⚠️ Calories exceed your target by {calories - target_calories:.0f} calories")
             if protein < target_protein:
                 st.warning(f"💪 Protein is below your target by {target_protein - protein:.1f} g")
 
-            # Exercise breakdown
             if "exercises" in exercise_data:
                 exercise_calories = sum(e["nf_calories"] for e in exercise_data["exercises"])
                 st.success(f"🔥 Calories burned through exercise: {exercise_calories:.0f} calories")
@@ -132,8 +130,10 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
                 if net_calories <= 0:
                     st.success("✅ You're in a calorie deficit — great job!")
+                elif net_calories <= 150:
+                    st.success("🟢 Balanced — slight surplus, still in a healthy range.")
                 elif net_calories <= 400:
-                    st.warning("🟡 Mild surplus — reasonable depending on your goals.")
+                    st.warning("🟡 Mild surplus — monitor depending on your goals.")
                 else:
                     st.error("🔴 Significant surplus — consider adjusting ingredients or activity.")
             else:
@@ -141,3 +141,15 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         else:
             st.error(f"⚠️ Could not fetch nutrition info. API said: {data.get('message', 'Unknown error')}")
 
+        st.markdown("---")
+        st.subheader("📊 Surplus Feedback Thresholds")
+        df = pd.DataFrame({
+            "Range (calories)": ["≤ 0", "1 – 150", "151 – 400", "> 400"],
+            "Feedback": [
+                "✅ Calorie deficit — great job!",
+                "🟢 Balanced — slight surplus",
+                "🟡 Mild surplus — monitor",
+                "🔴 Significant surplus — adjust"
+            ]
+        })
+        st.table(df)
