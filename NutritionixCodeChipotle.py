@@ -4,9 +4,7 @@ import requests
 import altair as alt
 import base64
 
-
-
-
+#Utilize the image in GitHub as a background
 def get_base64_image(path):
     with open(path, "rb") as img_file:
         b64_encoded = base64.b64encode(img_file.read()).decode()
