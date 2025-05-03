@@ -152,16 +152,16 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         fallback_duration = 60
 
         if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-            exercise = exercise_data["exercises"][0]
-            duration = exercise.get("duration_min", fallback_duration)
-            exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
+    exercise = exercise_data["exercises"][0]
+    duration = exercise.get("duration_min", fallback_duration)
+    exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
 
-            exercise_calories = exercise_calories_nlp
-net_calories = meal_totals["Calories"] - exercise_calories
+    exercise_calories = exercise_calories_nlp
+    net_calories = meal_totals["Calories"] - exercise_calories
         else:
             duration = fallback_duration
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-                net_calories = meal_totals["Calories"] - exercise_calories
+            net_calories = meal_totals["Calories"] - exercise_calories
 
         # Save values for persistent chart
         st.session_state["net_calories"] = net_calories
