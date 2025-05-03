@@ -3,5 +3,3 @@ requests
 pandas
 altair
 numpy
-calories_burned
-collections
