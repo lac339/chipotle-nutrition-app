@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import requests
-from calories_burned import burned_calories  # New: validation package
 
 # Load official Chipotle nutrition data from CSV
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
