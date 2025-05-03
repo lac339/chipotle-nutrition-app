@@ -3,12 +3,23 @@ import pandas as pd
 import requests
 import altair as alt
 
-# Load and round Chipotle nutrition data
+# ✅ Add custom background
+st.markdown('''
+<style>
+.stApp {
+background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
+background-size: cover;
+background-repeat: no-repeat;
+background-attachment: fixed;
+}
+</style>
+''', unsafe_allow_html=True)
+
+# ✅ Load and round Chipotle nutrition data
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
 numeric_columns = chipotle_df.select_dtypes(include='number').columns
 chipotle_df[numeric_columns] = chipotle_df[numeric_columns].round(0).astype(int)
 
-# Session state to persist data
 if "results" not in st.session_state:
     st.session_state.results = {}
 
@@ -31,7 +42,7 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
-# UI
+# 🎯 UI
 st.title("🌯 Chipotle Bowl + Fitness Analyzer")
 
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
@@ -106,7 +117,6 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         exercise_calories = sum(e["nf_calories"] for e in exercise_data["exercises"])
         net_calories = meal_totals["Calories"] - exercise_calories
 
-        # Store session state
         st.session_state.results = {
             "meal_totals": meal_totals,
             "exercise_calories": exercise_calories,
@@ -114,7 +124,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             "table_display": table_display
         }
 
-# Display persistent results
+# 🎯 Display Results
 if st.session_state.get("results"):
     meal_totals = st.session_state.results["meal_totals"]
     exercise_calories = st.session_state.results["exercise_calories"]
@@ -130,6 +140,7 @@ if st.session_state.get("results"):
     )
 
     st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
+
     st.subheader("🔥 Exercise Output")
     st.write(f"Calories burned: {exercise_calories}")
     st.info(f"⚖️ Net Calories (Meal - Exercise): {net_calories}")
@@ -171,6 +182,7 @@ if st.session_state.get("results"):
     | 🟡 Mild Surplus | 701–1000 | Slightly over |
     | 🔴 High Surplus | > 1000 | Adjust recommended |
     """)
+
 
 
         
