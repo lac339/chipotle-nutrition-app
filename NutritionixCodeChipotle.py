@@ -145,24 +145,42 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
     exercise_data = response.json()
 
-    if "exercises" in exercise_data:
-        duration = exercise_data["exercises"][0]["duration_min"]
-        exercise_calories_nlp = sum(e["nf_calories"] for e in exercise_data["exercises"])
-        exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
+if "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
+    exercise = exercise_data["exercises"][0]
+    duration = exercise.get("duration_min", 60)
+    exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
 
-        net_calories_nlp = meal_totals["Calories"] - exercise_calories_nlp
-        net_calories_local = meal_totals["Calories"] - exercise_calories_local
-
-        st.session_state.results = {
-            "meal_totals": meal_totals,
-            "exercise_calories_nlp": exercise_calories_nlp,
-            "exercise_calories_local": exercise_calories_local,
-            "net_calories_nlp": net_calories_nlp,
-            "net_calories_local": net_calories_local,
-            "table_display": table_display
-        }
+    # Use NLP result if it's positive; otherwise, fallback to local estimate
+    if exercise_calories_nlp > 0:
+        exercise_calories = exercise_calories_nlp
+        net_calories = meal_totals["Calories"] - exercise_calories
     else:
-        st.error("Nutritionix NLP failed to parse your input. Try simplifying your exercise description.")
+        exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
+        net_calories = meal_totals["Calories"] - exercise_calories
+
+    exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
+    net_calories_local = meal_totals["Calories"] - exercise_calories_local
+
+    # Display results directly
+    st.subheader("🔥 Exercise Output")
+    st.write(f"Calories burned (Nutritionix NLP): {exercise_calories_nlp}")
+    st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
+    st.success(f"Calories used in balance: {exercise_calories}")
+    st.info(f"Net Calories: {net_calories}")
+
+else:
+    # No NLP data available — fallback fully to local estimate
+    duration = 60
+    exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
+    net_calories_local = meal_totals["Calories"] - exercise_calories_local
+
+    st.warning("⚠️ Nutritionix NLP failed to parse your input. Using local estimate instead.")
+
+    # Display fallback results directly
+    st.subheader("🔥 Exercise Output")
+    st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
+    st.info(f"Net Calories: {net_calories_local}")
+
 
 # Display Results
 if st.session_state.get("results"):
