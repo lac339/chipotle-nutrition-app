@@ -91,7 +91,7 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 # Section 5: if st.button("Calculate Nutrition + Exercise Balance"):
-    if not selected_items:
+if not selected_items:
         st.error("❌ Please select at least one ingredient.")
     else:
         # Nutrition totals
