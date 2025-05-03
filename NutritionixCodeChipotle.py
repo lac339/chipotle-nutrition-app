@@ -119,24 +119,28 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             # Altair chart: Projected net calorie accumulation
             import altair as alt
             st.subheader("📈 Projected Net Calories Over Time")
-            frequency = st.selectbox("How often would you eat this meal?", ["Once a week", "3 times a week", "Daily"])
             weeks = st.slider("Over how many weeks?", 1, 12, 4)
 
-            if frequency == "Once a week":
-                times_per_week = 1
-            elif frequency == "3 times a week":
-                times_per_week = 3
-            else:
-                times_per_week = 7
+            frequencies = {
+                "Once a week": 1,
+                "3 times a week": 3,
+                "Daily": 7
+            }
 
-            weekly_net_cal = net_calories * times_per_week
-            net_cal_list = [weekly_net_cal * i for i in range(1, weeks + 1)]
-            chart_df = pd.DataFrame({"Week": list(range(1, weeks + 1)), "Cumulative Net Calories": net_cal_list})
+            all_data = []
+            for label, freq in frequencies.items():
+                weekly_net_cal = net_calories * freq
+                cumulative = [weekly_net_cal * i for i in range(1, weeks + 1)]
+                for week, cal in zip(range(1, weeks + 1), cumulative):
+                    all_data.append({"Week": week, "Cumulative Net Calories": cal, "Frequency": label})
+
+            chart_df = pd.DataFrame(all_data)
 
             calorie_chart = alt.Chart(chart_df).mark_line(point=True).encode(
                 x="Week",
                 y="Cumulative Net Calories",
-                tooltip=["Week", "Cumulative Net Calories"]
+                color="Frequency",
+                tooltip=["Week", "Cumulative Net Calories", "Frequency"]
             ).properties(
                 width=600,
                 height=300
@@ -160,5 +164,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             | 🟡 Mild Surplus | 701–1000 | Slightly over — okay depending on your goals |
             | 🔴 High Surplus | > 1000 | Exceeds typical meal target — adjust suggested |
             """)
+
+        
 
         
