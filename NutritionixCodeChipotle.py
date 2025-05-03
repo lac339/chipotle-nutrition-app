@@ -25,7 +25,7 @@ def calculate_total_nutrition(selected_items):
 
 # Inject background
 st.markdown('''<style>.stApp {
-background-image: url("ChatGPT Image May 2, 2025, 11_35_14 PM.png");
+background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
 background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
 }</style>''', unsafe_allow_html=True)
 
@@ -71,7 +71,7 @@ gender = st.selectbox("Sex:", ["None", "male", "female"])
 age = st.number_input("Age (years):", min_value=10, max_value=100, value=25)
 weight_lbs = st.number_input("Weight (lbs):", min_value=50.0, max_value=400.0, value=160.0)
 height_in = st.number_input("Height (inches):", min_value=48.0, max_value=84.0, value=70.0)
-exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour")
+exercise_query = st.text_input("What exercise did you do?", "walked for 1 hour", help="Please include the activity and duration (e.g., 'ran 30 minutes', 'yoga 1 hour')")
 
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
