@@ -58,9 +58,9 @@ def calories_burned_local(activity, weight_kg, duration_min):
 # UI
 st.title("🌯 Chipotle Bowl + Fitness Analyzer")
 
-proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
-grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
-beans = ['None', 'black beans', 'pinto beans', 'both beans']
+proteins = ['chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
+grains = ['white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
+beans = ['black beans', 'pinto beans', 'both beans']
 toppings = [
     'cheese', 'sour cream', 'guacamole', 'queso blanco', 'fajita vegetables',
     'fresh tomato salsa', 'roasted chili-corn salsa', 'tomatillo green-chili salsa',
@@ -98,6 +98,7 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 if st.button("Calculate Nutrition + Exercise Balance"):
+    # ✅ Validation check for required inputs
     if (
         selected_protein == "None"
         or selected_grain == "None"
@@ -139,9 +140,10 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         st.dataframe(table_display, use_container_width=True)
         st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
+        # Nutritionix NLP
         headers = {
-            "x-app-id": "your-app-id",
-            "x-app-key": "your-app-key",
+            "x-app-id": "your-app-id",  # Replace with your real app ID
+            "x-app-key": "your-app-key",  # Replace with your real key
             "Content-Type": "application/json"
         }
         exercise_payload = {
@@ -171,8 +173,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             duration = fallback_duration
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
             net_calories = meal_totals["Calories"] - exercise_calories
-            st.warning("⚠️ Nutritionix NLP failed. Using local estimate instead.")
 
+        # Save values for persistent chart
         st.session_state["net_calories"] = net_calories
         st.session_state["meal_totals"] = meal_totals
         st.session_state["table_display"] = table_display
@@ -181,13 +183,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         st.write(f"Calories burned: {exercise_calories}")
         st.info(f"Net Calories: {net_calories}")
 
-        if net_calories <= 700:
-            st.success("✅ You are in the Balanced range (≤ 700 kcal).")
-        elif net_calories <= 1000:
-            st.warning("🟡 Mild Surplus detected (701–1000 kcal).")
-        else:
-            st.error("🔴 High Surplus! Your meal exceeds the recommended range (> 1000 kcal).")
-
+# Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
     st.subheader("📈 Weekly Calorie Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
@@ -213,7 +209,7 @@ if "net_calories" in st.session_state and "meal_totals" in st.session_state:
     )
 
     st.markdown("""
-    ### 📏 Net Calorie Thresholds
+    ### 📟 Net Calorie Thresholds
     | Category | Net Calories | Description |
     |----------|---------------|-------------|
     | ✅ Balanced | ≤ 700 | Healthy meal range |
