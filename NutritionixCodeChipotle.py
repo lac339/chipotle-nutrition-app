@@ -119,7 +119,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             # Altair chart: Projected net calorie accumulation
             import altair as alt
             st.subheader("📈 Projected Net Calories Over Time")
-            weeks = st.slider("Over how many weeks?", 1, 12, 4)
+            with st.expander("📅 Visualize long-term impact"):
+                weeks = st.slider("Over how many weeks?", 1, 12, 4)
 
             frequencies = {
                 "Once a week": 1,
@@ -166,5 +167,6 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             """)
 
         
+
 
         
