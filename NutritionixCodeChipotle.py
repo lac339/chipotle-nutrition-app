@@ -25,7 +25,7 @@ def calculate_total_nutrition(selected_items):
 
 # Inject background
 st.markdown('''<style>.stApp {
-background-image: url("https://www.technocrazed.com/wp-content/uploads/2015/12/black-wallpaper-to-set-as-background-29.jpg");
+background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
 background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
 }</style>''', unsafe_allow_html=True)
 
@@ -67,7 +67,7 @@ selected_items.extend(selected_toppings)
 st.write(f"Meal: {', '.join(selected_items) if selected_items else 'None selected'}")
 
 st.header("🏃 Enter Your Exercise Info")
-gender = st.selectbox("Sex:", ["None", "male", "female"])
+gender = st.selectbox("Sex:", ["male", "female"])
 age = st.number_input("Age (years):", min_value=10, max_value=100, value=25)
 weight_lbs = st.number_input("Weight (lbs):", min_value=50.0, max_value=400.0, value=160.0)
 height_in = st.number_input("Height (inches):", min_value=48.0, max_value=84.0, value=70.0)
@@ -135,3 +135,33 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
         else:
             st.error("⚠️ Could not calculate exercise info. Check activity description.")
+
+            # Altair chart: Projected net calorie accumulation
+            import altair as alt
+            import numpy as np
+            
+            st.subheader("📈 Projected Net Calories Over Time")
+            frequency = st.selectbox("How often would you eat this meal?", ["Once a week", "3 times a week", "Daily"])
+            weeks = st.slider("Over how many weeks?", 1, 12, 4)
+            
+            if frequency == "Once a week":
+                times_per_week = 1
+            elif frequency == "3 times a week":
+                times_per_week = 3
+            else:
+                times_per_week = 7
+            
+            weekly_net_cal = net_calories * times_per_week
+            net_cal_list = [weekly_net_cal * i for i in range(1, weeks + 1)]
+            chart_df = pd.DataFrame({"Week": list(range(1, weeks + 1)), "Cumulative Net Calories": net_cal_list})
+            
+            calorie_chart = alt.Chart(chart_df).mark_line(point=True).encode(
+                x="Week",
+                y="Cumulative Net Calories",
+                tooltip=["Week", "Cumulative Net Calories"]
+            ).properties(
+                width=600,
+                height=300
+            ).interactive()
+            
+            st.altair_chart(calorie_chart, use_container_width=True)
