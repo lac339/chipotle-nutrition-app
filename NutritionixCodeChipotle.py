@@ -178,3 +178,37 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         st.subheader("🔥 Exercise Output")
         st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
         st.info(f"Net Calories: {net_calories_local}")
+    # Weekly Projection with Altair
+    st.subheader("📈 Weekly Calorie Projection")
+    weeks = st.slider("How many weeks?", 1, 12, 4)
+    frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
+
+    # Use net_calories if defined, fallback to local
+    projected_net = net_calories if 'net_calories' in locals() else net_calories_local
+
+    chart_data = []
+    for label, freq in frequencies.items():
+        for w in range(1, weeks + 1):
+            chart_data.append({
+                "Week": w,
+                "Cumulative Net Calories": projected_net * freq * w,
+                "Frequency": label
+            })
+    df_chart = pd.DataFrame(chart_data)
+
+    st.altair_chart(
+        alt.Chart(df_chart).mark_line(point=True).encode(
+            x="Week", y="Cumulative Net Calories", color="Frequency",
+            tooltip=["Week", "Cumulative Net Calories", "Frequency"]
+        ).properties(width=700, height=350).interactive(),
+        use_container_width=True
+    )
+
+    st.markdown("""
+    ### 📟 Net Calorie Thresholds
+    | Category | Net Calories | Description |
+    |----------|---------------|-------------|
+    | ✅ Balanced | ≤ 700 | Healthy meal range |
+    | 🟡 Mild Surplus | 701–1000 | Slightly over |
+    | 🔴 High Surplus | > 1000 | Adjust recommended |
+    """)
