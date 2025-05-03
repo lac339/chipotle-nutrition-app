@@ -44,27 +44,6 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
-def calories_burned_local(activity, weight_kg, duration_min):
-    METS = {
-        "walking": 3.5, "running": 9.8, "bicycling": 7.5, "weightlifting": 6.0,
-        "yoga": 2.5, "swimming": 8.0, "dancing": 7.8, "elliptical": 5.0,
-        "hiking": 6.0, "aerobics": 7.3, "basketball": 8.0, "soccer": 10.0,
-        "tennis": 8.0, "boxing": 12.0, "skateboarding": 5.0, "skiing": 7.0,
-        "rowing": 7.0, "jumping jacks": 8.0, "pilates": 3.0, "climbing": 9.5,
-        "stairs": 4.0, "stretching": 2.3, "tai chi": 3.0, "pushups": 8.0,
-        "pullups": 8.0, "plank": 3.3, "jump rope": 12.3, "martial arts": 10.3,
-        "surfing": 5.0, "volleyball": 4.0, "softball": 5.0, "baseball": 5.0,
-        "golf": 4.8, "rugby": 11.0, "lacrosse": 10.0, "horseback riding": 5.5,
-        "kayaking": 5.0, "skating": 7.0, "fencing": 6.0, "gardening": 3.8,
-        "mowing lawn": 5.5, "housework": 3.0, "cleaning": 3.5, "jumping": 8.5
-    }
-    try:
-        key = activity.lower().split()[0]
-        met = METS.get(key, 3.5)
-        return round(met * weight_kg * (duration_min / 60), 2)
-    except Exception:
-        return round(3.5 * weight_kg * (duration_min / 60), 2)
-
 # UI
 st.title("\U0001F32F Chipotle Bowl + Fitness Analyzer")
 
@@ -142,7 +121,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     st.dataframe(table_display, use_container_width=True)
     st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
-    # Nutritionix NLP
+    # Nutritionix NLP only
     headers = {
         "x-app-id": "your-app-id",
         "x-app-key": "your-app-key",
@@ -157,18 +136,14 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     }
     response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
     exercise_data = response.json()
-    fallback_duration = 60
 
     if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
-        exercise = exercise_data["exercises"][0]
-        duration = exercise.get("duration_min", fallback_duration)
-        exercise_calories_nlp = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
-        exercise_calories = exercise_calories_nlp
+        exercise_calories = sum(e.get("nf_calories", 0) for e in exercise_data["exercises"])
         net_calories = meal_totals["Calories"] - exercise_calories
     else:
-        duration = fallback_duration
-        exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-        net_calories = meal_totals["Calories"] - exercise_calories
+        st.error("⚠️ Nutritionix could not parse your exercise input. Try simplifying the phrase.")
+        exercise_calories = 0
+        net_calories = meal_totals["Calories"]
 
     st.session_state["net_calories"] = net_calories
     st.session_state["meal_totals"] = meal_totals
@@ -180,7 +155,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
 
 # Weekly projection chart persists after slider interaction
 if "net_calories" in st.session_state and "meal_totals" in st.session_state:
-    st.subheader("\U0001F4C8 Weekly Calorie Projection")
+    st.subheader("📈 Weekly Calorie Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
     frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
 
