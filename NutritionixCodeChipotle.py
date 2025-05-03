@@ -4,8 +4,10 @@ import requests
 import altair as alt
 import numpy as np
 
-# Load Chipotle nutrition data
+# Load and round Chipotle nutrition data
 chipotle_df = pd.read_csv("chipotle_nutrition_2025_complete.csv")
+numeric_columns = chipotle_df.select_dtypes(include='number').columns
+chipotle_df[numeric_columns] = chipotle_df[numeric_columns].round(0).astype(int)
 
 def get_chipotle_nutrition(item_name):
     match = chipotle_df[chipotle_df['Item'].str.lower() == item_name.lower()]
@@ -28,14 +30,13 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
-# Background
+# Background image
 st.markdown('''<style>.stApp {
 background-image: url("https://c8.alamy.com/comp/2M79TT2/chipotle-mexican-grill-rotated-logo-black-background-2M79TT2.jpg");
 background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
 }</style>''', unsafe_allow_html=True)
 
-# Ingredient selection
-st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
+# Ingredient options
 proteins = ['None', 'chicken', 'steak', 'barbacoa', 'carnitas', 'sofritas']
 grains = ['None', 'white rice', 'brown rice', '1/2 white rice and 1/2 brown rice']
 beans = ['None', 'black beans', 'pinto beans', 'both beans']
@@ -44,6 +45,8 @@ toppings = [
     'fresh tomato salsa', 'roasted chili-corn salsa', 'tomatillo green-chili salsa', 
     'tomatillo red-chili salsa', 'romaine lettuce'
 ]
+
+st.title("🌯 Build Your Chipotle Bowl + Workout Tracker")
 
 st.header("🍽️ Choose Your Ingredients")
 selected_protein = st.selectbox("Choose your protein:", proteins)
@@ -79,7 +82,6 @@ exercise_query = st.text_input(
 weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
-# Button logic
 if st.button("Calculate Nutrition + Exercise Balance"):
     if not selected_items:
         st.error("❌ Please select at least one ingredient.")
@@ -104,7 +106,7 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             use_container_width=True
         )
 
-        st.success(f"✅ Total Calories: {totals['Calories']:.0f} | Protein: {totals['Protein (g)']}g | Sodium: {totals['Sodium (mg)']}mg")
+        st.success(f"✅ Total Calories: {totals['Calories']} | Protein: {totals['Protein (g)']}g | Sodium: {totals['Sodium (mg)']}mg")
 
         # Exercise + Net Calories
         headers = {
@@ -127,8 +129,8 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             net_calories = totals["Calories"] - exercise_calories
 
             st.subheader("🔥 Exercise Output")
-            st.write(f"Calories burned: {exercise_calories:.0f}")
-            st.info(f"⚖️ Net Calories (Meal - Exercise): {net_calories:.0f}")
+            st.write(f"Calories burned: {exercise_calories}")
+            st.info(f"⚖️ Net Calories (Meal - Exercise): {net_calories}")
             st.markdown("🧠 _Baseline: 700 calories per meal is considered balanced._")
 
             diff = net_calories - 700
@@ -139,24 +141,23 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             else:
                 st.error(f"🔴 High surplus: {diff} cal over the 700-calorie mark.")
 
-            # Chart
+            # Weekly Projection Chart
             st.subheader("📈 Weekly Impact Projection")
             weeks = st.slider("How many weeks?", 1, 12, 4)
-
             frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
             chart_data = []
-            for freq_label, freq_val in frequencies.items():
+            for label, freq in frequencies.items():
                 for w in range(1, weeks + 1):
                     chart_data.append({
                         "Week": w,
-                        "Cumulative Net Calories": net_calories * freq_val * w,
-                        "Frequency": freq_label
+                        "Cumulative Net Calories": net_calories * freq * w,
+                        "Frequency": label
                     })
             df_chart = pd.DataFrame(chart_data)
-
             st.altair_chart(
                 alt.Chart(df_chart).mark_line(point=True).encode(
-                    x="Week", y="Cumulative Net Calories", color="Frequency", tooltip=["Week", "Cumulative Net Calories"]
+                    x="Week", y="Cumulative Net Calories", color="Frequency",
+                    tooltip=["Week", "Cumulative Net Calories", "Frequency"]
                 ).properties(width=700, height=350).interactive(),
                 use_container_width=True
             )
