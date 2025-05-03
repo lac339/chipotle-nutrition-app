@@ -111,9 +111,9 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             if item_counts[item] > 1:
                 display_labels.append(f"{item} x{seen[item]}")
             else:
-            duration = fallback_duration
-            exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
-            net_calories = meal_totals["Calories"] - exercise_calories
+    duration = fallback_duration
+    exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
+    net_calories = meal_totals["Calories"] - exercise_calories
 
         # Save values for persistent chart
         st.session_state["net_calories"] = net_calories
