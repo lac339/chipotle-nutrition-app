@@ -98,15 +98,7 @@ weight_kg = weight_lbs * 0.453592
 height_cm = height_in * 2.54
 
 if st.button("Calculate Nutrition + Exercise Balance"):
-    if (
-        selected_protein == "None"
-        or selected_grain == "None"
-        or selected_beans == "None"
-        or len(selected_toppings) == 0
-        or exercise_query.strip() == ""
-    ):
-        st.error("\u26a0\ufe0f Please fill out all required fields: choose protein, grain, beans, at least one topping, and enter an exercise.")
-    else:
+    
         meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
         item_counts = Counter(selected_items)
