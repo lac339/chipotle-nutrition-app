@@ -44,16 +44,17 @@ def calculate_total_nutrition(selected_items):
             breakdown.append(chipotle_data)
     return total, breakdown
 
+from calories_burned import burned_calories
+
 def calories_burned_local(activity, weight_kg, duration_min):
-    METS = {
-        "walk": 3.5,
-        "run": 9.8,
-        "bike": 7.5,
-        "lift": 6.0
-    }
-    key = activity.lower().split()[0]
-    met = METS.get(key, 3.5)
-    return round(met * weight_kg * (duration_min / 60), 2)
+    try:
+        return burned_calories(
+            activity=activity,
+            weight_kg=weight_kg,
+            duration_minutes=duration_min
+        )
+    except Exception:
+        return 3.5 * weight_kg * (duration_min / 60)
 
 # UI
 st.title("\U0001F32F Chipotle Bowl + Fitness Analyzer")
