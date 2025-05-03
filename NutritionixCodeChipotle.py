@@ -100,7 +100,6 @@ height_cm = height_in * 2.54
 if st.button("Calculate Nutrition + Exercise Balance"):
     meal_totals, breakdown = calculate_total_nutrition(selected_items)
 
-    # Handle item labeling
     item_counts = Counter(selected_items)
     seen = Counter()
     display_labels = []
@@ -127,15 +126,14 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     total_row.insert(0, "Item", "TOTAL")
     table_display = pd.concat([selected_df, total_row], ignore_index=True)
 
-    # Display nutrition breakdown
     st.subheader("🍽️ Meal Nutrition Breakdown")
     st.dataframe(table_display, use_container_width=True)
     st.success(f"✅ Total Calories: {meal_totals['Calories']} | Protein: {meal_totals['Protein (g)']}g | Sodium: {meal_totals['Sodium (mg)']}mg")
 
-    # Call Nutritionix NLP
+    # Nutritionix NLP
     headers = {
-        "x-app-id": "your-app-id",  # Replace with your actual ID
-        "x-app-key": "your-app-key",  # Replace with your actual key
+        "x-app-id": "your-app-id",  # Replace with your real app ID
+        "x-app-key": "your-app-key",  # Replace with your real key
         "Content-Type": "application/json"
     }
     exercise_payload = {
@@ -145,9 +143,9 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         "height_cm": height_cm,
         "age": age
     }
+
     response = requests.post("https://trackapi.nutritionix.com/v2/natural/exercise", headers=headers, json=exercise_payload)
     exercise_data = response.json()
-
     fallback_duration = 60
 
     if response.status_code == 200 and "exercises" in exercise_data and len(exercise_data["exercises"]) > 0:
@@ -160,32 +158,29 @@ if st.button("Calculate Nutrition + Exercise Balance"):
         else:
             exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
 
-        exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
         net_calories = meal_totals["Calories"] - exercise_calories
-
-        st.subheader("🔥 Exercise Output")
-        st.write(f"Calories burned (Nutritionix NLP): {exercise_calories_nlp}")
-        st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
-        st.success(f"Calories used in balance: {exercise_calories}")
-        st.info(f"Net Calories: {net_calories}")
-
     else:
         duration = fallback_duration
-        exercise_calories_local = calories_burned_local(exercise_query, weight_kg, duration)
-        net_calories_local = meal_totals["Calories"] - exercise_calories_local
-
+        exercise_calories = calories_burned_local(exercise_query, weight_kg, duration)
+        net_calories = meal_totals["Calories"] - exercise_calories
         st.warning("⚠️ Nutritionix NLP failed. Using local estimate instead.")
-        st.subheader("🔥 Exercise Output")
-        st.write(f"Calories burned (Local Estimate): {exercise_calories_local}")
-        st.info(f"Net Calories: {net_calories_local}")
-    # Weekly Projection with Altair
+
+    # Save values for persistent chart
+    st.session_state["net_calories"] = net_calories
+    st.session_state["meal_totals"] = meal_totals
+    st.session_state["table_display"] = table_display
+
+    st.subheader("🔥 Exercise Output")
+    st.write(f"Calories burned: {exercise_calories}")
+    st.info(f"Net Calories: {net_calories}")
+
+# Weekly projection chart persists after slider interaction
+if "net_calories" in st.session_state and "meal_totals" in st.session_state:
     st.subheader("📈 Weekly Calorie Projection")
     weeks = st.slider("How many weeks?", 1, 12, 4)
     frequencies = {"Once a week": 1, "3 times a week": 3, "Daily": 7}
 
-    # Use net_calories if defined, fallback to local
-    projected_net = net_calories if 'net_calories' in locals() else net_calories_local
-
+    projected_net = st.session_state["net_calories"]
     chart_data = []
     for label, freq in frequencies.items():
         for w in range(1, weeks + 1):
@@ -210,5 +205,4 @@ if st.button("Calculate Nutrition + Exercise Balance"):
     |----------|---------------|-------------|
     | ✅ Balanced | ≤ 700 | Healthy meal range |
     | 🟡 Mild Surplus | 701–1000 | Slightly over |
-    | 🔴 High Surplus | > 1000 | Adjust recommended |
-    """)
+    | 🔴 High S
