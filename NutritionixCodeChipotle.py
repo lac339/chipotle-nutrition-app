@@ -116,6 +116,34 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             st.write(f"Calories burned: {exercise_calories:.0f}")
             st.info(f"⚖️ Net Calories (Meal - Exercise): {net_calories:.0f}")
 
+            # Altair chart: Projected net calorie accumulation
+            import altair as alt
+            st.subheader("📈 Projected Net Calories Over Time")
+            frequency = st.selectbox("How often would you eat this meal?", ["Once a week", "3 times a week", "Daily"])
+            weeks = st.slider("Over how many weeks?", 1, 12, 4)
+
+            if frequency == "Once a week":
+                times_per_week = 1
+            elif frequency == "3 times a week":
+                times_per_week = 3
+            else:
+                times_per_week = 7
+
+            weekly_net_cal = net_calories * times_per_week
+            net_cal_list = [weekly_net_cal * i for i in range(1, weeks + 1)]
+            chart_df = pd.DataFrame({"Week": list(range(1, weeks + 1)), "Cumulative Net Calories": net_cal_list})
+
+            calorie_chart = alt.Chart(chart_df).mark_line(point=True).encode(
+                x="Week",
+                y="Cumulative Net Calories",
+                tooltip=["Week", "Cumulative Net Calories"]
+            ).properties(
+                width=600,
+                height=300
+            ).interactive()
+
+            st.altair_chart(calorie_chart, use_container_width=True)
+
             diff = net_calories - 700
             if net_calories <= 700:
                 st.success(f"✅ Balanced meal. You are {abs(diff)} calories {'under' if diff < 0 else 'at'} the 700-calorie baseline.")
@@ -133,35 +161,4 @@ if st.button("Calculate Nutrition + Exercise Balance"):
             | 🔴 High Surplus | > 1000 | Exceeds typical meal target — adjust suggested |
             """)
 
-        else:
-            st.error("⚠️ Could not calculate exercise info. Check activity description.")
-
-            # Altair chart: Projected net calorie accumulation
-            import altair as alt
-            import numpy as np
-            
-            st.subheader("📈 Projected Net Calories Over Time")
-            frequency = st.selectbox("How often would you eat this meal?", ["Once a week", "3 times a week", "Daily"])
-            weeks = st.slider("Over how many weeks?", 1, 12, 4)
-            
-            if frequency == "Once a week":
-                times_per_week = 1
-            elif frequency == "3 times a week":
-                times_per_week = 3
-            else:
-                times_per_week = 7
-            
-            weekly_net_cal = net_calories * times_per_week
-            net_cal_list = [weekly_net_cal * i for i in range(1, weeks + 1)]
-            chart_df = pd.DataFrame({"Week": list(range(1, weeks + 1)), "Cumulative Net Calories": net_cal_list})
-            
-            calorie_chart = alt.Chart(chart_df).mark_line(point=True).encode(
-                x="Week",
-                y="Cumulative Net Calories",
-                tooltip=["Week", "Cumulative Net Calories"]
-            ).properties(
-                width=600,
-                height=300
-            ).interactive()
-            
-            st.altair_chart(calorie_chart, use_container_width=True)
+        
